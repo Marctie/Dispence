@@ -113,48 +113,60 @@
 }
 
 // ─── Dark Mode ───────────────────────────────────────────────────────────────
+// Applicata sia quando il sistema è in dark (e l'utente non ha forzato "chiaro"),
+// sia quando l'utente seleziona manualmente "scuro" dalle Impostazioni
+// (ThemeService applica la classe .ion-palette-dark su <html>), indipendentemente
+// dalla preferenza di sistema.
+
+@mixin dark-palette {
+  --color-primary-light:    rgba(61, 124, 71, 0.18);
+  --color-accent-light:     rgba(224, 123, 57, 0.18);
+  --color-danger-light:     rgba(201, 64, 64, 0.18);
+  --color-warning-light:    rgba(212, 160, 23, 0.18);
+
+  --color-surface:          #1c1c1a;
+  --color-surface-alt:      #252522;
+  --color-surface-card:     #2a2a27;
+  --color-surface-input:    #2e2e2b;
+
+  --color-text:             #f0ede8;
+  --color-text-secondary:   #c8c5c0;
+  --color-text-muted:       #9b9b8e;
+  --color-text-placeholder: #6b6b60;
+
+  --color-border:       #3a3a36;
+  --color-border-light: #323230;
+
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.18);
+  --shadow-md:  0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.22);
+  --shadow-lg:  0 10px 30px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.28);
+
+  --ion-background-color:     #1c1c1a;
+  --ion-background-color-rgb: 28, 28, 26;
+  --ion-text-color:           #f0ede8;
+  --ion-text-color-rgb:       240, 237, 232;
+
+  --ion-toolbar-background:   #1c1c1a;
+  --ion-toolbar-color:        #f0ede8;
+  --ion-toolbar-border-color: #3a3a36;
+
+  --ion-tab-bar-background:    #1c1c1a;
+  --ion-tab-bar-border-color:  #3a3a36;
+  --ion-tab-bar-color:         #9b9b8e;
+  --ion-tab-bar-color-selected: #3d7c47;
+
+  --ion-item-background:   #2a2a27;
+  --ion-item-border-color: #3a3a36;
+  --ion-card-background:   #2a2a27;
+  --ion-border-color:      #3a3a36;
+}
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --color-primary-light:    rgba(61, 124, 71, 0.18);
-    --color-accent-light:     rgba(224, 123, 57, 0.18);
-    --color-danger-light:     rgba(201, 64, 64, 0.18);
-    --color-warning-light:    rgba(212, 160, 23, 0.18);
-
-    --color-surface:          #1c1c1a;
-    --color-surface-alt:      #252522;
-    --color-surface-card:     #2a2a27;
-    --color-surface-input:    #2e2e2b;
-
-    --color-text:             #f0ede8;
-    --color-text-secondary:   #c8c5c0;
-    --color-text-muted:       #9b9b8e;
-    --color-text-placeholder: #6b6b60;
-
-    --color-border:       #3a3a36;
-    --color-border-light: #323230;
-
-    --shadow-sm:  0 1px 3px rgba(0,0,0,0.25), 0 1px 2px rgba(0,0,0,0.18);
-    --shadow-md:  0 4px 12px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.22);
-    --shadow-lg:  0 10px 30px rgba(0,0,0,0.45), 0 4px 8px rgba(0,0,0,0.28);
-
-    --ion-background-color:     #1c1c1a;
-    --ion-background-color-rgb: 28, 28, 26;
-    --ion-text-color:           #f0ede8;
-    --ion-text-color-rgb:       240, 237, 232;
-
-    --ion-toolbar-background:   #1c1c1a;
-    --ion-toolbar-color:        #f0ede8;
-    --ion-toolbar-border-color: #3a3a36;
-
-    --ion-tab-bar-background:    #1c1c1a;
-    --ion-tab-bar-border-color:  #3a3a36;
-    --ion-tab-bar-color:         #9b9b8e;
-    --ion-tab-bar-color-selected: #3d7c47;
-
-    --ion-item-background:   #2a2a27;
-    --ion-item-border-color: #3a3a36;
-    --ion-card-background:   #2a2a27;
-    --ion-border-color:      #3a3a36;
+  :root:not(.ion-palette-light) {
+    @include dark-palette;
   }
+}
+
+:root.ion-palette-dark {
+  @include dark-palette;
 }

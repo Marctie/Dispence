@@ -28,5 +28,6 @@ export class ThemeService {
     this.currentTheme$.next(mode);
     const isDark = mode === 'dark' || (mode === 'system' && this.mediaQuery.matches);
     document.documentElement.classList.toggle('ion-palette-dark', isDark);
+    document.documentElement.classList.toggle('ion-palette-light', mode === 'light');
   }
 }
