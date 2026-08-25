@@ -1,0 +1,31 @@
+<div
+  class="product-card"
+  (click)="editClick.emit()"
+  role="button"
+  tabindex="0"
+  [attr.aria-label]="'Modifica ' + product.name"
+  (keydown.enter)="editClick.emit()">
+
+  <span class="category-emoji" aria-hidden="true">{{ emoji }}</span>
+
+  <div class="card-info">
+    <p class="product-name">{{ product.name }}</p>
+    <div class="card-meta">
+      <span class="location-chip">{{ locationLabel }}</span>
+      <span class="quantity">{{ product.quantity }} {{ product.unit }}</span>
+    </div>
+  </div>
+
+  <div class="card-right">
+    <app-expiry-badge [expiryDate]="product.expiryDate"></app-expiry-badge>
+    @if (showActions) {
+      <button
+        class="delete-btn"
+        (click)="$event.stopPropagation(); deleteClick.emit()"
+        [attr.aria-label]="'Elimina ' + product.name">
+        <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
+      </button>
+    }
+  </div>
+
+</div>

@@ -1,0 +1,244 @@
+// ── Filter chips ─────────────────────────────────────────────────────────────
+
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  padding: var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-card);
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &--active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+
+  &--success.chip--active { background: var(--color-success); border-color: var(--color-success); }
+  &--warning.chip--active { background: var(--color-warning); border-color: var(--color-warning); color: #000; }
+  &--accent.chip--active  { background: var(--color-accent);  border-color: var(--color-accent); }
+}
+
+// ── Recipe list ───────────────────────────────────────────────────────────────
+
+.recipe-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 var(--space-md) var(--space-md);
+}
+
+.recipe-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+
+  &:active { transform: scale(0.98); }
+}
+
+.recipe-emoji {
+  font-size: 2.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.recipe-info { flex: 1; min-width: 0; }
+
+.recipe-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin-bottom: 4px;
+}
+
+.recipe-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  flex-wrap: wrap;
+}
+
+.recipe-time {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  ion-icon { font-size: 0.85rem; }
+}
+
+.recipe-difficulty {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+
+  &--easy   { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
+  &--medium { background: rgba(var(--ion-color-warning-rgb), 0.15); color: var(--color-warning); }
+  &--hard   { background: rgba(var(--ion-color-danger-rgb), 0.12);  color: var(--ion-color-danger); }
+}
+
+.recipe-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ── Score ring ────────────────────────────────────────────────────────────────
+
+.score-ring {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 800;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 3px solid currentColor;
+  flex-shrink: 0;
+
+  &--success { color: var(--ion-color-success); }
+  &--warning { color: var(--color-warning); }
+  &--medium  { color: var(--color-text-muted); }
+
+  .score-pct { font-size: 0.6rem; font-weight: 600; }
+}
+
+// ── Detail sheet ──────────────────────────────────────────────────────────────
+
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.detail-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  padding: var(--space-sm) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
+  z-index: 1001;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: slideUp 0.25s ease;
+}
+
+.detail-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--color-border);
+  border-radius: 2px;
+  margin: 0 auto var(--space-md);
+}
+
+.detail-header {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: var(--space-sm);
+}
+
+.detail-emoji { font-size: 2.8rem; line-height: 1; flex-shrink: 0; }
+
+.detail-name {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin: 0 0 6px;
+}
+
+.detail-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.score-inline {
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+
+  &.score-ring--success { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
+  &.score-ring--warning { background: rgba(var(--ion-color-warning-rgb), 0.15); color: var(--color-warning); }
+  &.score-ring--medium  { background: var(--color-surface-card); color: var(--color-text-muted); }
+}
+
+.detail-desc {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+
+// ── Ingredients ───────────────────────────────────────────────────────────────
+
+.ingredient-section { margin-bottom: var(--space-md); }
+
+.ingredient-group { margin-bottom: var(--space-md); }
+
+.ingredient-group-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+
+  ion-icon { font-size: 1rem; }
+
+  &--have    { color: var(--ion-color-success); }
+  &--missing { color: var(--color-text-muted); }
+}
+
+.ingredient-item {
+  display: inline-block;
+  margin: 3px;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 500;
+
+  &--have    { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
+  &--missing { background: var(--color-surface-card); color: var(--color-text-muted); border: 1.5px dashed var(--color-border); }
+}
+
+@keyframes fadeIn  { from { opacity: 0; }    to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }

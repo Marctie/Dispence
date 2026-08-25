@@ -1,0 +1,65 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Dispensa</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openAddProduct()" aria-label="Aggiungi prodotto">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <div class="search-bar-wrap">
+    <ion-searchbar
+      [(ngModel)]="searchTerm"
+      placeholder="Cerca prodotti..."
+      mode="md"
+      [debounce]="200">
+    </ion-searchbar>
+  </div>
+
+  <div class="location-filter">
+    @for (loc of locations; track loc.id) {
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="activeLocation === loc.id"
+        (click)="activeLocation = loc.id"
+        type="button">
+        {{ loc.label }}
+      </button>
+    }
+  </div>
+
+  @if (filteredProducts.length > 0) {
+    <div class="product-list">
+      @for (product of filteredProducts; track product.id) {
+        <app-product-card
+          [product]="product"
+          (editClick)="openAddProduct(product)"
+          (deleteClick)="confirmDelete(product)">
+        </app-product-card>
+      }
+    </div>
+  } @else {
+    <div class="empty-state" style="margin-top: 40px">
+      <span class="empty-icon">{{ searchTerm ? '🔍' : '🏠' }}</span>
+      <p class="empty-title">{{ searchTerm ? 'Nessun risultato' : 'La dispensa è vuota' }}</p>
+      <p class="empty-text">
+        {{ searchTerm
+          ? 'Prova con un altro termine di ricerca'
+          : 'Premi il + in alto a destra per aggiungere il tuo primo prodotto' }}
+      </p>
+    </div>
+  }
+
+  <app-footer></app-footer>
+
+</ion-content>
+
+<ion-fab slot="fixed" vertical="bottom" horizontal="end">
+  <ion-fab-button (click)="openAddProduct()" color="primary" aria-label="Aggiungi prodotto">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

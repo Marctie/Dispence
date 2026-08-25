@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+www/
+dist/
+
+# Angular cache
+.angular/
+
+# Android native project (generated + keystore/signing)
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/*.jks
+android/*.keystore
+android/key.properties
+*.jks
+*.keystore
+keystore.properties
+
+# Environment / secrets
+.env
+.env.*
+*secrets*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*

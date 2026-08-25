@@ -1,0 +1,6 @@
+<ion-app>
+  <ion-router-outlet></ion-router-outlet>
+  @if (showOnboarding) {
+    <app-onboarding (done)="onOnboardingDone()"></app-onboarding>
+  }
+</ion-app>

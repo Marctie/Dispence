@@ -1,0 +1,52 @@
+.search-bar-wrap {
+  padding: var(--space-sm) var(--space-sm) 0;
+
+  ion-searchbar {
+    --background: var(--color-surface-card);
+    --border-radius: var(--radius-md);
+    --box-shadow: var(--shadow-sm);
+    --placeholder-color: var(--color-text-placeholder);
+    --color: var(--color-text);
+    --icon-color: var(--color-text-muted);
+    --cancel-button-color: var(--color-text-muted);
+    padding: 0;
+  }
+}
+
+.location-filter {
+  display: flex;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.825rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &--active {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+.product-list {
+  padding: var(--space-sm) var(--space-md) 80px;
+}
+
+ion-fab {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}

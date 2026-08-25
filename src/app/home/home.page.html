@@ -1,0 +1,139 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <div class="header-logo">
+        <svg class="logo-svg" width="24" height="24" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="3.5" y="5" width="3.5" height="30" rx="1.75" fill="currentColor" opacity="0.28"/>
+          <rect x="33" y="5" width="3.5" height="30" rx="1.75" fill="currentColor" opacity="0.28"/>
+          <rect x="3.5" y="22" width="33" height="3.5" rx="1.75" fill="currentColor"/>
+          <rect x="3.5" y="31.5" width="33" height="3.5" rx="1.75" fill="currentColor" opacity="0.45"/>
+          <rect x="7" y="8" width="7" height="14" rx="2.5" fill="currentColor"/>
+          <rect x="17" y="11" width="6" height="11" rx="2" fill="currentColor" opacity="0.72"/>
+          <rect x="26" y="7" width="7.5" height="15" rx="2.5" fill="currentColor" opacity="0.88"/>
+          <rect x="8.5" y="26" width="5" height="5.5" rx="1.5" fill="currentColor" opacity="0.68"/>
+          <rect x="17" y="25.5" width="8" height="6" rx="2" fill="currentColor"/>
+          <rect x="28" y="26" width="5" height="5.5" rx="1.5" fill="currentColor" opacity="0.68"/>
+        </svg>
+        <span>Dispensa</span>
+      </div>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openAddProduct()" aria-label="Aggiungi prodotto">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- Alert banner scaduti -->
+  @if (expiredProducts.length > 0) {
+    <div class="alert-banner alert-banner--danger" role="alert">
+      <ion-icon name="warning-outline" aria-hidden="true"></ion-icon>
+      <span>
+        {{ expiredProducts.length }}
+        {{ expiredProducts.length === 1 ? 'prodotto scaduto' : 'prodotti scaduti' }}
+      </span>
+      <ion-button fill="clear" size="small" routerLink="/tabs/inventory" class="alert-btn">Vedi</ion-button>
+    </div>
+  }
+
+  <!-- Alert banner scade oggi -->
+  @if (expiringTodayCount > 0) {
+    <div class="alert-banner alert-banner--warning" role="alert">
+      <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+      <span>
+        {{ expiringTodayCount }}
+        {{ expiringTodayCount === 1 ? 'prodotto scade oggi' : 'prodotti scadono oggi' }}
+      </span>
+      <ion-button fill="clear" size="small" routerLink="/tabs/inventory" class="alert-btn">Vedi</ion-button>
+    </div>
+  }
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value text-primary">{{ totalProducts }}</div>
+      <div class="stat-label">Prodotti</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" [class.stat-value--danger]="expiredProducts.length > 0" [class.stat-value--accent]="alertCount > 0 && expiredProducts.length === 0">{{ alertCount }}</div>
+      <div class="stat-label">Alert</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" [class.stat-value--warning]="lowStockProducts.length > 0">{{ lowStockProducts.length }}</div>
+      <div class="stat-label">Scorte basse</div>
+    </div>
+  </div>
+
+  <!-- Da consumare presto -->
+  <div class="section-header">
+    <h2>Da consumare presto</h2>
+    @if (expiringProducts.length > 0) {
+      <ion-button fill="clear" size="small" routerLink="/tabs/inventory">Vedi tutti</ion-button>
+    }
+  </div>
+
+  @if (expiringProducts.length > 0) {
+    <div class="expiring-list">
+      @for (p of expiringProducts.slice(0, 5); track p.id) {
+        <div class="expiring-item">
+          <span class="expiring-emoji" aria-hidden="true">{{ getEmoji(p.category) }}</span>
+          <span class="expiring-name">{{ p.name }}</span>
+          <app-expiry-badge [expiryDate]="p.expiryDate"></app-expiry-badge>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <span class="empty-icon">🥦</span>
+      <p class="empty-title">Tutto fresco!</p>
+      <p class="empty-text">Nessun prodotto in scadenza nei prossimi 7 giorni</p>
+    </div>
+  }
+
+  <!-- Scorte basse -->
+  @if (lowStockProducts.length > 0) {
+    <div class="section-header">
+      <h2>Scorte basse</h2>
+      <ion-button fill="clear" size="small" routerLink="/tabs/shopping">Lista spesa</ion-button>
+    </div>
+    <div class="expiring-list">
+      @for (p of lowStockProducts; track p.id) {
+        <div class="expiring-item">
+          <span class="expiring-emoji" aria-hidden="true">{{ getEmoji(p.category) }}</span>
+          <span class="expiring-name">{{ p.name }}</span>
+          <div class="low-stock-right">
+            <span class="qty-badge">{{ p.quantity }} {{ p.unit }}</span>
+            <button
+              class="add-to-cart-btn"
+              [class.add-to-cart-btn--added]="isInShoppingList(p.id)"
+              (click)="addToShoppingList(p)"
+              [disabled]="isInShoppingList(p.id)"
+              [attr.aria-label]="'Aggiungi ' + p.name + ' alla lista spesa'">
+              <ion-icon [name]="isInShoppingList(p.id) ? 'checkmark-circle' : 'cart-outline'" aria-hidden="true"></ion-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Quick actions (solo se dispensa vuota) -->
+  @if (totalProducts === 0) {
+    <div class="quick-actions">
+      <ion-button expand="block" fill="solid" color="primary" (click)="openAddProduct()">
+        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        Aggiungi il primo prodotto
+      </ion-button>
+      <ion-button expand="block" fill="outline" color="primary" routerLink="/tabs/inventory">
+        <ion-icon slot="start" name="list-outline"></ion-icon>
+        Vai alla dispensa
+      </ion-button>
+    </div>
+  }
+
+  <app-footer></app-footer>
+
+</ion-content>

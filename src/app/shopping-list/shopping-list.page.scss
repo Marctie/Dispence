@@ -1,0 +1,114 @@
+.suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 var(--space-md) var(--space-sm);
+}
+
+.suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--color-primary-light);
+  border: 1.5px dashed var(--color-primary);
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:active { background: var(--color-primary); color: #fff; }
+
+  ion-icon { font-size: 1rem; }
+}
+
+.suggestion-name { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  padding: 1px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+
+  &--muted { background: var(--color-text-muted); }
+}
+
+.items-list {
+  padding: 0 var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &--checked { opacity: 0.55; }
+}
+
+.shopping-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  padding: 12px var(--space-md);
+  box-shadow: var(--shadow-sm);
+
+  &--checked .item-name {
+    text-decoration: line-through;
+    color: var(--color-text-muted);
+  }
+}
+
+.check-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: var(--color-border);
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &--checked { color: var(--color-primary); }
+}
+
+.item-emoji { font-size: 1.25rem; line-height: 1; flex-shrink: 0; }
+
+.item-name {
+  flex: 1;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-qty {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.delete-item-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  flex-shrink: 0;
+
+  &:hover { color: var(--color-danger); }
+}
+
+ion-fab { margin-bottom: env(safe-area-inset-bottom, 0px); }

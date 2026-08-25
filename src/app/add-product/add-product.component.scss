@@ -1,0 +1,88 @@
+.form-content { --background: var(--color-surface); }
+
+.form-section {
+  padding: var(--space-md) var(--space-md) 0;
+}
+
+.form-row {
+  display: flex;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md);
+}
+
+.form-col { flex: 1; padding-left: 0; padding-right: 0; }
+
+.form-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 0 0 6px;
+}
+
+.form-input {
+  --background: var(--color-surface-card);
+  --color: var(--color-text);
+  --placeholder-color: var(--color-text-placeholder);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  --border-radius: var(--radius-md);
+  border-radius: var(--radius-md);
+  min-height: 48px;
+  box-shadow: var(--shadow-sm);
+}
+
+.form-textarea { --padding-top: 12px; --padding-bottom: 12px; min-height: 80px; }
+
+.form-select {
+  --background: var(--color-surface-card);
+  --color: var(--color-text);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+  border-radius: var(--radius-md);
+  min-height: 48px;
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface-card);
+}
+
+.location-picker { display: flex; gap: var(--space-sm); }
+
+.loc-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-surface-card);
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+
+  &--active {
+    background: var(--color-primary-light);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    font-weight: 700;
+  }
+}
+
+.threshold-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  padding: 12px var(--space-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.threshold-desc {
+  flex: 1;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}

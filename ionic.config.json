@@ -1,0 +1,7 @@
+{
+  "name": "dispensina-digitale",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

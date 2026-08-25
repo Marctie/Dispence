@@ -1,0 +1,88 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Lista spesa</ion-title>
+    <ion-buttons slot="end">
+      @if (checkedItems.length > 0) {
+        <ion-button (click)="confirmClearChecked()" color="medium" aria-label="Svuota spuntati">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      }
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  @if (suggestedProducts.length > 0) {
+    <div class="section-header">
+      <h2>Suggeriti dalla dispensa</h2>
+    </div>
+    <div class="suggestions-list">
+      @for (p of suggestedProducts; track p.id) {
+        <div class="suggestion-chip" (click)="addSuggestion(p.id)">
+          <span>{{ getEmoji(p.category) }}</span>
+          <span class="suggestion-name">{{ p.name }}</span>
+          <ion-icon name="add-circle-outline"></ion-icon>
+        </div>
+      }
+    </div>
+  }
+
+  @if (pendingItems.length > 0) {
+    <div class="section-header">
+      <h2>Da comprare <span class="count-badge">{{ pendingItems.length }}</span></h2>
+    </div>
+    <div class="items-list">
+      @for (item of pendingItems; track item.id) {
+        <div class="shopping-item">
+          <button class="check-btn" (click)="toggle(item.id)" [attr.aria-label]="'Segna come comprato: ' + item.name">
+            <ion-icon name="ellipse-outline"></ion-icon>
+          </button>
+          <span class="item-emoji" aria-hidden="true">{{ getEmoji(item.category) }}</span>
+          <span class="item-name">{{ item.name }}</span>
+          <span class="item-qty">{{ item.quantity }} {{ item.unit }}</span>
+          <button class="delete-item-btn" (click)="delete(item.id)" [attr.aria-label]="'Elimina ' + item.name">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (checkedItems.length > 0) {
+    <div class="section-header">
+      <h2 class="text-muted">Già comprati <span class="count-badge count-badge--muted">{{ checkedItems.length }}</span></h2>
+    </div>
+    <div class="items-list items-list--checked">
+      @for (item of checkedItems; track item.id) {
+        <div class="shopping-item shopping-item--checked">
+          <button class="check-btn check-btn--checked" (click)="toggle(item.id)" [attr.aria-label]="'Deseleziona: ' + item.name">
+            <ion-icon name="checkmark-circle"></ion-icon>
+          </button>
+          <span class="item-emoji" aria-hidden="true">{{ getEmoji(item.category) }}</span>
+          <span class="item-name">{{ item.name }}</span>
+          <button class="delete-item-btn" (click)="delete(item.id)" [attr.aria-label]="'Elimina ' + item.name">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+
+  @if (items.length === 0) {
+    <div class="empty-state" style="margin-top: 64px">
+      <span class="empty-icon">🛒</span>
+      <p class="empty-title">Lista vuota</p>
+      <p class="empty-text">Premi + per aggiungere articoli. Imposta la soglia minima su un prodotto per ricevere suggerimenti automatici</p>
+    </div>
+  }
+
+  <app-footer></app-footer>
+
+</ion-content>
+
+<ion-fab slot="fixed" vertical="bottom" horizontal="end">
+  <ion-fab-button (click)="promptAddItem()" color="primary" aria-label="Aggiungi articolo">
+    <ion-icon name="add"></ion-icon>
+  </ion-fab-button>
+</ion-fab>

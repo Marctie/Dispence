@@ -1,0 +1,138 @@
+@import "@ionic/angular/css/core.css";
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+@import "@ionic/angular/css/palettes/dark.system.css";
+
+// ─── Typography ──────────────────────────────────────────────────────────────
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, .display {
+  font-family: var(--font-display);
+}
+
+// ─── Ionic Resets ────────────────────────────────────────────────────────────
+
+ion-content {
+  --background: var(--color-surface);
+}
+
+ion-header {
+  box-shadow: none !important;
+  &::after { display: none; }
+}
+
+ion-footer {
+  box-shadow: none !important;
+  &::before { display: none; }
+}
+
+ion-toolbar {
+  --border-color: var(--color-border);
+  --padding-start: var(--space-md);
+  --padding-end: var(--space-md);
+}
+
+ion-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
+}
+
+ion-item {
+  --background: var(--color-surface-card);
+  --border-color: var(--color-border);
+  --inner-border-width: 0 0 1px 0;
+  --padding-start: var(--space-md);
+}
+
+ion-card {
+  --background: var(--color-surface-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  margin: 0;
+}
+
+// ─── Shared Components ───────────────────────────────────────────────────────
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-lg) var(--space-md) var(--space-sm);
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  ion-button {
+    font-size: 0.8rem;
+    --color: var(--color-primary);
+  }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  gap: var(--space-sm);
+
+  .empty-icon {
+    font-size: 3rem;
+    line-height: 1;
+    margin-bottom: var(--space-xs);
+  }
+
+  .empty-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .empty-text {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin: 0;
+    max-width: 260px;
+    line-height: 1.5;
+  }
+}
+
+.page-content {
+  padding: 0 var(--space-md) var(--space-xl);
+}
+
+// ─── Utility ─────────────────────────────────────────────────────────────────
+
+.text-primary    { color: var(--color-primary) !important; }
+.text-accent     { color: var(--color-accent) !important; }
+.text-danger     { color: var(--color-danger) !important; }
+.text-warning    { color: var(--color-warning) !important; }
+.text-muted      { color: var(--color-text-muted) !important; }
+.text-display    { font-family: var(--font-display) !important; }
+
+.bg-primary-light { background: var(--color-primary-light) !important; }
+.bg-accent-light  { background: var(--color-accent-light) !important; }
+.bg-danger-light  { background: var(--color-danger-light) !important; }
+.bg-card          { background: var(--color-surface-card) !important; }

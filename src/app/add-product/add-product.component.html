@@ -1,0 +1,101 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()" color="medium">Annulla</ion-button>
+    </ion-buttons>
+    <ion-title>{{ isEditMode ? 'Modifica' : 'Aggiungi' }} prodotto</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="save()" [disabled]="!isValid" color="primary" strong="true">
+        Salva
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="form-content">
+
+  <div class="form-section">
+    <p class="form-label">Nome *</p>
+    <ion-input
+      class="form-input"
+      [(ngModel)]="name"
+      placeholder="Es. Latte, Pomodori, Pasta..."
+      [clearInput]="true"
+      autocapitalize="sentences"
+      inputmode="text">
+    </ion-input>
+  </div>
+
+  <div class="form-row">
+    <div class="form-section form-col">
+      <p class="form-label">Quantità</p>
+      <ion-input class="form-input" type="number" [(ngModel)]="quantity" min="0" inputmode="decimal"></ion-input>
+    </div>
+    <div class="form-section form-col">
+      <p class="form-label">Unità</p>
+      <ion-select class="form-select" [(ngModel)]="unit" interface="action-sheet" [interfaceOptions]="{ header: 'Unità di misura' }">
+        @for (u of units; track u) {
+          <ion-select-option [value]="u">{{ u }}</ion-select-option>
+        }
+      </ion-select>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Posizione</p>
+    <div class="location-picker">
+      @for (loc of locationOptions; track loc) {
+        <button class="loc-btn" [class.loc-btn--active]="location === loc" (click)="location = loc" type="button">
+          {{ locationLabels[loc] }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Categoria</p>
+    <ion-select class="form-select" [(ngModel)]="category" interface="action-sheet" [interfaceOptions]="{ header: 'Categoria' }">
+      @for (cat of categories; track cat.id) {
+        <ion-select-option [value]="cat.id">{{ cat.emoji }} {{ cat.name }}</ion-select-option>
+      }
+    </ion-select>
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Scadenza</p>
+    <ion-input class="form-input" type="date" [(ngModel)]="expiryDate"></ion-input>
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Scorte basse</p>
+    <div class="threshold-row">
+      <ion-toggle [(ngModel)]="lowStockEnabled" color="primary"></ion-toggle>
+      <span class="threshold-desc">Avvisami quando la quantità scende sotto la soglia</span>
+    </div>
+    @if (lowStockEnabled) {
+      <ion-input
+        class="form-input"
+        style="margin-top: 8px"
+        type="number"
+        [(ngModel)]="lowStockThreshold"
+        min="1"
+        placeholder="Soglia minima (es. 2)"
+        inputmode="numeric">
+      </ion-input>
+    }
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Note</p>
+    <ion-textarea
+      class="form-input form-textarea"
+      [(ngModel)]="notes"
+      rows="3"
+      placeholder="Note aggiuntive..."
+      auto-grow="true">
+    </ion-textarea>
+  </div>
+
+  <div style="height: 40px"></div>
+
+</ion-content>

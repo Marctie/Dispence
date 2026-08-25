@@ -1,0 +1,7 @@
+@if (status !== 'none') {
+  <span
+    class="expiry-badge expiry-badge--{{ status }}"
+    [attr.aria-label]="'Scadenza: ' + label">
+    {{ label }}
+  </span>
+}

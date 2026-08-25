@@ -1,0 +1,141 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>
+      <div class="header-title">
+        <span>Ricette</span>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar
+      [(ngModel)]="search"
+      placeholder="Cerca ricetta o ingrediente..."
+      [debounce]="300"
+      animated="true">
+    </ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- Filter chips -->
+  <div class="filter-chips">
+    <button class="chip" [class.chip--active]="filter === 'all'" (click)="filter = 'all'">
+      Tutte ({{ filtered.length }})
+    </button>
+    <button class="chip chip--success" [class.chip--active]="filter === 'available'" (click)="filter = 'available'">
+      ✅ Disponibili ({{ availableCount }})
+    </button>
+    <button class="chip chip--warning" [class.chip--active]="filter === 'almost'" (click)="filter = 'almost'">
+      🟡 Quasi pronte ({{ almostCount }})
+    </button>
+    <button class="chip chip--accent" [class.chip--active]="filter === 'antiwaste'" (click)="filter = 'antiwaste'">
+      ♻️ Anti-spreco ({{ antiwasteCount }})
+    </button>
+  </div>
+
+  <!-- Recipe list -->
+  @if (filtered.length > 0) {
+    <div class="recipe-list">
+      @for (r of filtered; track r.id) {
+        <div class="recipe-card" (click)="openDetail(r)" role="button" [attr.aria-label]="r.name">
+          <div class="recipe-emoji">{{ r.emoji }}</div>
+          <div class="recipe-info">
+            <div class="recipe-name">{{ r.name }}</div>
+            <div class="recipe-meta">
+              <span class="recipe-time">
+                <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+                {{ r.time }} min
+              </span>
+              <span class="recipe-difficulty difficulty--{{ r.difficulty }}">
+                {{ difficultyLabels[r.difficulty] }}
+              </span>
+            </div>
+            <div class="recipe-desc">{{ r.description }}</div>
+          </div>
+          <div class="recipe-score">
+            <div class="score-ring score-ring--{{ scoreColor(r) }}">
+              {{ scorePercent(r) }}<span class="score-pct">%</span>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="empty-state">
+      <span class="empty-icon">🍳</span>
+      @if (filter === 'available') {
+        <p class="empty-title">Nessuna ricetta disponibile</p>
+        <p class="empty-text">Aggiungi più prodotti in dispensa per sbloccare ricette complete</p>
+      } @else if (filter === 'antiwaste') {
+        <p class="empty-title">Nessun ingrediente in scadenza</p>
+        <p class="empty-text">Le ricette anti-spreco appaiono quando hai prodotti che scadono presto</p>
+      } @else if (search) {
+        <p class="empty-title">Nessun risultato</p>
+        <p class="empty-text">Prova con un altro termine di ricerca</p>
+      } @else {
+        <p class="empty-title">Nessuna ricetta trovata</p>
+        <p class="empty-text">Aggiungi prodotti alla dispensa: ti suggeriremo le ricette migliori</p>
+      }
+    </div>
+  }
+
+  <app-footer></app-footer>
+
+</ion-content>
+
+<!-- Detail modal (inline sheet) -->
+@if (selectedRecipe) {
+  <div class="detail-overlay" (click)="closeDetail()" role="button" aria-label="Chiudi dettaglio"></div>
+  <div class="detail-sheet" role="dialog" [attr.aria-label]="selectedRecipe.name">
+    <div class="detail-handle"></div>
+    <div class="detail-header">
+      <span class="detail-emoji">{{ selectedRecipe.emoji }}</span>
+      <div>
+        <h2 class="detail-name">{{ selectedRecipe.name }}</h2>
+        <div class="detail-meta">
+          <span class="recipe-time">
+            <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
+            {{ selectedRecipe.time }} min
+          </span>
+          <span class="recipe-difficulty difficulty--{{ selectedRecipe.difficulty }}">
+            {{ difficultyLabels[selectedRecipe.difficulty] }}
+          </span>
+          <span class="score-inline score-ring--{{ scoreColor(selectedRecipe) }}">
+            {{ scorePercent(selectedRecipe) }}% ingredienti
+          </span>
+        </div>
+      </div>
+    </div>
+    <p class="detail-desc">{{ selectedRecipe.description }}</p>
+
+    <div class="ingredient-section">
+      @if (selectedRecipe.matchedIngredients.length > 0) {
+        <div class="ingredient-group">
+          <div class="ingredient-group-title ingredient-group-title--have">
+            <ion-icon name="checkmark-circle" aria-hidden="true"></ion-icon>
+            Hai in dispensa ({{ selectedRecipe.matchedIngredients.length }})
+          </div>
+          @for (ing of selectedRecipe.matchedIngredients; track ing) {
+            <div class="ingredient-item ingredient-item--have">{{ ing }}</div>
+          }
+        </div>
+      }
+      @if (selectedRecipe.missingIngredients.length > 0) {
+        <div class="ingredient-group">
+          <div class="ingredient-group-title ingredient-group-title--missing">
+            <ion-icon name="close-circle-outline" aria-hidden="true"></ion-icon>
+            Mancanti ({{ selectedRecipe.missingIngredients.length }})
+          </div>
+          @for (ing of selectedRecipe.missingIngredients; track ing) {
+            <div class="ingredient-item ingredient-item--missing">{{ ing }}</div>
+          }
+        </div>
+      }
+    </div>
+
+    <ion-button expand="block" fill="solid" color="primary" (click)="closeDetail()">
+      Chiudi
+    </ion-button>
+  </div>
+}

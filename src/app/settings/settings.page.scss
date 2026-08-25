@@ -1,0 +1,164 @@
+.settings-section {
+  padding-top: var(--space-lg);
+}
+
+.settings-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  padding: 0 var(--space-md) var(--space-xs);
+  margin: 0;
+}
+
+ion-list { --background: transparent; }
+
+ion-item {
+  --border-radius: var(--radius-md);
+
+  h3 { font-weight: 500; font-size: 0.925rem; }
+
+  p {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+}
+
+// ── Stats overview ────────────────────────────────────────────────────────────
+
+.stats-overview {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 0 var(--space-md) var(--space-sm);
+}
+
+.stat-tile {
+  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  padding: 10px 6px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+
+  &--danger  .stat-tile-value { color: var(--color-danger); }
+  &--warning .stat-tile-value { color: var(--color-warning); }
+  &--accent  .stat-tile-value { color: var(--color-accent); }
+}
+
+.stat-tile-value {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--color-primary);
+  line-height: 1.1;
+}
+
+.stat-tile-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin-top: 3px;
+}
+
+// ── Bar charts ────────────────────────────────────────────────────────────────
+
+.stat-bar-section {
+  margin: var(--space-sm) var(--space-md);
+  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-bar-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-sm);
+}
+
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.stat-bar-emoji { font-size: 1.1rem; flex-shrink: 0; }
+
+.stat-bar-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text);
+  width: 72px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+
+.stat-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  min-width: 4px;
+
+  &--accent { background: var(--color-accent); }
+}
+
+.stat-bar-count {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+// ── Expiry buckets ────────────────────────────────────────────────────────────
+
+.expiry-bucket {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child { border-bottom: none; }
+}
+
+.expiry-bucket-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.expiry-bucket-count {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.expiry-bucket--danger  { .expiry-bucket-count { color: var(--color-danger); } }
+.expiry-bucket--warning { .expiry-bucket-count { color: var(--color-warning); } }
+.expiry-bucket--primary { .expiry-bucket-count { color: var(--color-primary); } }
+.expiry-bucket--success { .expiry-bucket-count { color: var(--ion-color-success); } }

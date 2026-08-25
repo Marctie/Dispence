@@ -1,0 +1,32 @@
+<div class="onboarding-backdrop">
+  <div class="onboarding-sheet" role="dialog" aria-modal="true" [attr.aria-label]="steps[step].title">
+
+    <div class="step-dots">
+      @for (s of steps; track $index) {
+        <span class="dot" [class.dot--active]="$index === step"></span>
+      }
+    </div>
+
+    <div class="step-content">
+      <div class="step-emoji">{{ steps[step].emoji }}</div>
+      <h1 class="step-title">{{ steps[step].title }}</h1>
+      <p class="step-text">{{ steps[step].text }}</p>
+    </div>
+
+    <div class="step-actions">
+      <ion-button
+        expand="block"
+        fill="solid"
+        color="primary"
+        (click)="next()">
+        {{ step < steps.length - 1 ? 'Continua' : 'Inizia' }}
+      </ion-button>
+      @if (step < steps.length - 1) {
+        <ion-button expand="block" fill="clear" color="medium" (click)="finish()">
+          Salta
+        </ion-button>
+      }
+    </div>
+
+  </div>
+</div>

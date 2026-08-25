@@ -1,0 +1,171 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Impostazioni</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+  <!-- ── Aspetto ────────────────────────────────────────────────────────── -->
+  <div class="settings-section">
+    <p class="settings-label">Aspetto</p>
+    <ion-list inset="true">
+      <ion-item>
+        <ion-label>Tema</ion-label>
+        <ion-segment
+          slot="end"
+          [value]="currentTheme"
+          (ionChange)="onThemeChange($event)"
+          style="max-width: 140px">
+          <ion-segment-button value="light">
+            <ion-icon name="sunny-outline"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="system">
+            <ion-icon name="contrast-outline"></ion-icon>
+          </ion-segment-button>
+          <ion-segment-button value="dark">
+            <ion-icon name="moon-outline"></ion-icon>
+          </ion-segment-button>
+        </ion-segment>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- ── Notifiche ──────────────────────────────────────────────────────── -->
+  <div class="settings-section">
+    <p class="settings-label">Avvisi scadenza</p>
+    <ion-list inset="true">
+      <ion-item>
+        <ion-icon name="alarm-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Giorni di preavviso</h3>
+          <p>Avvisa {{ alertDays }} {{ alertDays === 1 ? 'giorno' : 'giorni' }} prima della scadenza</p>
+        </ion-label>
+      </ion-item>
+      <ion-item>
+        <ion-range
+          [min]="1"
+          [max]="30"
+          [step]="1"
+          [value]="alertDays"
+          (ionChange)="onAlertDaysChange($event)"
+          color="primary"
+          aria-label="Giorni di preavviso scadenza">
+          <ion-label slot="start">1</ion-label>
+          <ion-label slot="end">30</ion-label>
+        </ion-range>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- ── Statistiche ────────────────────────────────────────────────────── -->
+  @if (totalProducts > 0) {
+    <div class="settings-section">
+      <p class="settings-label">Statistiche dispensa</p>
+
+      <!-- Overview cards -->
+      <div class="stats-overview">
+        <div class="stat-tile">
+          <span class="stat-tile-value">{{ totalProducts }}</span>
+          <span class="stat-tile-label">Prodotti</span>
+        </div>
+        <div class="stat-tile stat-tile--danger">
+          <span class="stat-tile-value">{{ totalExpired }}</span>
+          <span class="stat-tile-label">Scaduti</span>
+        </div>
+        <div class="stat-tile stat-tile--warning">
+          <span class="stat-tile-value">{{ totalExpiring }}</span>
+          <span class="stat-tile-label">In scadenza</span>
+        </div>
+        <div class="stat-tile stat-tile--accent">
+          <span class="stat-tile-value">{{ totalLowStock }}</span>
+          <span class="stat-tile-label">Scorte basse</span>
+        </div>
+      </div>
+
+      <!-- Per categoria -->
+      @if (byCategory.length > 0) {
+        <div class="stat-bar-section">
+          <p class="stat-bar-title">Prodotti per categoria</p>
+          @for (c of byCategory; track c.category) {
+            <div class="stat-bar-row">
+              <span class="stat-bar-emoji">{{ c.emoji }}</span>
+              <span class="stat-bar-label">{{ c.category }}</span>
+              <div class="stat-bar-track">
+                <div class="stat-bar-fill" [style.width.%]="(c.count / maxCategory()) * 100"></div>
+              </div>
+              <span class="stat-bar-count">{{ c.count }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Per posizione -->
+      @if (byLocation.length > 0) {
+        <div class="stat-bar-section">
+          <p class="stat-bar-title">Prodotti per posizione</p>
+          @for (l of byLocation; track l.location) {
+            <div class="stat-bar-row">
+              <span class="stat-bar-emoji">
+                @if (l.location === 'pantry')  { 🗄️ }
+                @else if (l.location === 'fridge')  { ❄️ }
+                @else { 🧊 }
+              </span>
+              <span class="stat-bar-label">{{ l.label }}</span>
+              <div class="stat-bar-track">
+                <div class="stat-bar-fill stat-bar-fill--accent" [style.width.%]="(l.count / maxLocation()) * 100"></div>
+              </div>
+              <span class="stat-bar-count">{{ l.count }}</span>
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Distribuzione scadenze -->
+      @if (expiryBuckets.length > 0) {
+        <div class="stat-bar-section">
+          <p class="stat-bar-title">Distribuzione scadenze</p>
+          @for (b of expiryBuckets; track b.label) {
+            <div class="expiry-bucket" [class]="'expiry-bucket--' + b.color">
+              <span class="expiry-bucket-label">{{ b.label }}</span>
+              <span class="expiry-bucket-count">{{ b.count }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- ── Informazioni ───────────────────────────────────────────────────── -->
+  <div class="settings-section">
+    <p class="settings-label">Informazioni</p>
+    <ion-list inset="true">
+      <ion-item>
+        <ion-icon name="information-circle-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Dispensina Digitale</h3>
+          <p>Versione 1.0.0</p>
+        </ion-label>
+      </ion-item>
+      <ion-item button="true" routerLink="/help" detail="true">
+        <ion-icon name="help-circle-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Guida e domande frequenti</h3>
+        </ion-label>
+      </ion-item>
+      <ion-item
+        href="https://marctie.github.io/DispenceAi-privacy/it/"
+        target="_blank"
+        rel="noopener noreferrer"
+        detail="true">
+        <ion-icon name="shield-checkmark-outline" slot="start" color="primary"></ion-icon>
+        <ion-label>
+          <h3>Informativa sulla privacy</h3>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <app-footer></app-footer>
+
+</ion-content>
