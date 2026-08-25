@@ -2,52 +2,55 @@
 
 Ultimo aggiornamento: 2026-08-25
 
+## ⏸️ Pausa sessione — ripartire da qui
+
+**Siamo a metà della compilazione della scheda "Norme sui contenuti dell'app" / Store Listing su Google Play Console.** L'utente aveva già account sviluppatore attivo e ha creato l'app. Prossimo passo quando si riprende: chiedere all'utente a che punto esatto è arrivato nella console (probabilmente Store Listing → categoria/tipo app) e continuare da lì. Tutti i testi e gli asset necessari sono già pronti (vedi sotto), non serve rigenerare nulla.
+
+**Cosa mandare all'utente appena richiesto, già pronti:**
+- Testi Store Listing (nome, descrizione breve/estesa, categoria) → `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md`
+- Icona 512×512, feature graphic 1024×500, 6 screenshot reali (chiaro+scuro) → `docs/store-assets/`
+- File `.aab` firmato e aggiornato (con fix tema scuro) → `android/app/build/outputs/bundle/release/app-release.aab`
+- Risposte Data Safety form e content rating → `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md`
+
 ## Riepilogo
 App Ionic/Angular + Capacitor per la gestione della dispensa domestica. Ribattezzata da "Dispensa Alimentare" a "Dispensina Digitale". Segue lo stesso processo/qualità del progetto FinanzAI verso la pubblicazione su Play Store.
 
 ## Fatto
 - [x] Audit completo del codice esistente
-- [x] Rebranding: nome app, appId (`com.dispensinadigitale.app`), package.json, ionic.config.json, capacitor.config.ts, manifest, index.html
-- [x] Rimossi tutti i riferimenti personali (nome, link personali) da settings, footer, package.json
-- [x] Repository git inizializzato, remote privato `Marctie/Dispence`, .gitignore configurato (esclude keystore, credenziali, android/build, node_modules, www)
-- [x] Repo pubblico dedicato per privacy policy: `Marctie/DispenceAi-privacy`
-- [x] Categorie personalizzate (create/modifica/elimina) tramite `CategoryService` + pagina `/manage-categories`
-- [x] Scansione codici a barre: `@capacitor-mlkit/barcode-scanning` (Google ML Kit on-device, no Firebase) + cache locale (`BarcodeCacheService`) + arricchimento opzionale via Open Food Facts solo se online, fallback manuale sempre disponibile
-- [x] Notifiche di scadenza locali reali: `@capacitor/local-notifications`, ripianificate reattivamente a ogni modifica prodotti/preferenze; canale "expiry-alerts" creato all'avvio (verificato via log di sistema su emulatore)
-- [x] Filtri in Dispensa: posizione, categoria, stato scadenza (in scadenza/scaduti), testo libero
-- [x] Backup/export JSON con checksum SHA-256 (`BackupService`) + backup automatico silenzioso a ogni avvio + ripristino da file o da backup interno
-- [x] Dati demo (`DemoDataService`): seed al primo avvio se dispensa vuota, badge "Esempio" in UI, rimozione con backup di sicurezza automatico prima
-- [x] Splash screen nativa configurata e collegata al ciclo di avvio, verificata visivamente su emulatore
-- [x] Guida in-app / FAQ (`/help`, linkata da Impostazioni)
-- [x] Prezzo opzionale prodotto + statistiche: valore stimato sprecato, prodotti più ricomprati
-- [x] Progetto nativo Android creato, permessi camera/notifiche in AndroidManifest
-- [x] Icone app/launcher Android e splash rigenerate dal logo esistente (originale, tema dispensa) con `@capacitor/assets`
-- [x] Gestione robusta degli errori in `app.component.ts` (avvio e completamento onboarding non bloccano più la UI in caso di eccezione in un side-effect come backup automatico o seed dati demo)
-- [x] Test unitari (Jasmine/Karma): 11/11 verdi — `CategoryService` (categorie predefinite protette, categorie custom CRUD, persistenza), `BackupService` (checksum valido, rifiuto backup manomesso, ripristino corretto)
-- [x] **JDK 21 portable** installato in locale (bypassando un blocco di Windows Installer) senza toccare il JDK 25 di sistema — usato solo per le build Android
-- [x] **Keystore di firma generato** con `keytool` (RSA 2048, validità 10000 giorni), password casuali sicure salvate solo in `keystore-privato/` (escluso da git)
-- [x] `signingConfig` esplicito in `android/app/build.gradle`, credenziali lette da `android/keystore.properties` (escluso da git)
-- [x] **Build `bundleRelease` (.aab) e `assembleRelease` (.apk) generate e firmate** con successo
-- [x] **Firma verificata**: impronta SHA-256 del certificato nel `.aab`/`.apk` confrontata byte-per-byte con quella del keystore tramite `keytool`, `jarsigner` e `apksigner` — tutte coincidenti
-- [x] App installata e testata su emulatore Android reale: avvio, splash screen, home, onboarding renderizzano correttamente; screenshot catturati via `adb exec-out screencap` (non da browser)
-- [x] Rimosso blocco Firebase morto (try/catch `google-services.json`) da `build.gradle`, mai referenziato altrove — coerente col requisito "no Firebase"
+- [x] Rebranding completo (nome, appId `com.dispensinadigitale.app`, package.json, manifest, index.html), nessun riferimento personale residuo
+- [x] Repository privato `Marctie/Dispence` + repo pubblico `Marctie/DispenceAi-privacy` per la privacy policy
+- [x] Tutte le funzionalità core: categorie personalizzate, scanner barcode (ML Kit + Open Food Facts), notifiche locali reali, filtri avanzati, backup/export con checksum + backup automatico silenzioso, dati demo rimovibili, splash screen, guida FAQ, statistiche (spreco economico, prodotti più ricomprati)
+- [x] Progetto Android nativo, icone/splash rigenerate dal logo originale
+- [x] Test unitari 11/11 verdi (CategoryService, BackupService)
+- [x] JDK 21 portable installato (bypass blocco Windows Installer), non tocca il JDK 25 di sistema — vedi note tecniche per il path
+- [x] Keystore di firma generato, `signingConfig` esplicito, credenziali solo locali (mai in git)
+- [x] Build `.aab`/`.apk` firmate e **verificate** (impronta SHA-256 coincidente tra keystore e bundle, controllata con keytool/jarsigner/apksigner)
+- [x] App testata su emulatore Android reale (avvio, splash, home, onboarding, canale notifiche) tramite Chrome DevTools Protocol — l'automazione dei tap via `adb shell input tap` si è rivelata inaffidabile su questo emulatore, risolta collegandosi al WebView via CDP (`chrome://inspect` protocol) per pilotare l'app in modo affidabile
+- [x] **Bug reale trovato e corretto**: il tema "scuro" selezionato manualmente nelle Impostazioni non si applicava se il sistema operativo era in chiaro (variabili CSS dark legate solo a `@media prefers-color-scheme`, mai alla classe che il ThemeService imposta). Corretto con un mixin SCSS condiviso + gestione esplicita anche della scelta "chiaro" per sovrascrivere un sistema in dark mode. Verificato visivamente dopo il fix.
+- [x] Privacy policy IT/EN pubblicata e **online e raggiungibile** (GitHub Pages attivato dall'utente, verificato con 200 OK su entrambe le lingue)
+- [x] Tutti i testi Play Console pronti in `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md` (store listing, content rating, Data Safety, permessi)
+- [x] Asset store generati: icona 512×512, feature graphic 1024×500, 6 screenshot reali (chiaro+scuro) con dati demo popolati, in `docs/store-assets/`
+- [x] App creata su Google Play Console dall'utente (account sviluppatore già attivo)
 
-## Da fare — funzionalità core
-- [ ] Test interattivo completo di scanner barcode e flusso notifiche end-to-end: l'automazione dei tap via ADB si è rivelata inaffidabile su questo emulatore (tap che non vengono consegnati in modo intermittente, verificato anche su schermate di sistema non legate all'app) — non è stato possibile completare in automatico il click-through dell'onboarding e delle altre schermate. **Consigliato un test manuale rapido da parte dell'utente**, toccando fisicamente lo schermo dell'emulatore o di un device reale, specialmente per: permesso fotocamera + scansione barcode, permesso notifiche + ricezione notifica di scadenza.
+## In corso — sessione Play Console (da riprendere)
+- [ ] Categoria/tipo app — l'utente era su questo step quando si è interrotta la sessione
+- [ ] Store Listing completo (icona, feature graphic, screenshot, descrizioni) — testi e asset pronti, da incollare/caricare
+- [ ] App content: Privacy Policy URL, Ads (no), Content rating (questionario), Target audience, **Data Safety form** (risposte dettagliate pronte in `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md`, non ancora compilate in console)
+- [ ] Creazione release (consigliato: partire da un test interno prima della produzione), upload `.aab`
+- [ ] Countries/pricing (gratuita, tutti i paesi o selezione)
+- [ ] Rollout finale
 
-## Da fare — pubblicazione
-- [ ] Screenshot store definitivi (dopo il test manuale sopra, con dati reali in dispensa per mostrare le funzionalità)
-- [ ] Privacy policy IT+EN: pushata su `Marctie/DispenceAi-privacy`, **manca l'abilitazione manuale di GitHub Pages** nelle impostazioni del repository (Settings → Pages → Source: main branch) — richiede accesso non disponibile via API
-- [x] Data Safety form e content rating: risposte pronte in `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md`
-- [x] `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md` con testi scheda store pronti (nome, descrizioni, categoria, permessi, checklist)
-- [ ] Creazione app su Google Play Console, upload `.aab`, compilazione schede (segue guida passo passo)
+## Da fare — funzionalità core (non bloccante per submit)
+- [ ] Test interattivo manuale di scanner barcode e notifiche su device reale (il test via emulatore con permessi camera reali non è stato possibile in questa sessione)
 
 ## Backlog (richieste future, non prioritarie ora)
 _(vuoto per ora)_
 
 ## Note tecniche
-- Plugin Capacitor morti rimossi dal progetto originale: `@capacitor/app`, `@capacitor/haptics`, `@capacitor/keyboard`, `@capacitor/status-bar` (installati ma mai usati nel codice).
+- Plugin Capacitor morti rimossi dal progetto originale: `@capacitor/app`, `@capacitor/haptics`, `@capacitor/keyboard`, `@capacitor/status-bar`.
 - Nessun `server` remoto in capacitor.config.ts — corretto, punta a `www/` locale.
 - Stato gestito con servizi Angular + RxJS BehaviorSubject + localStorage (no NgRx, no Signals).
-- JDK 21 portable si trova fuori dal repo in `../jdk21/jdk-21.0.12.1+1` (non versionato). Per build future: `export JAVA_HOME=.../jdk21/jdk-21.0.12.1+1` prima di `./gradlew`.
+- **JDK 21 portable**: `../jdk21/jdk-21.0.12.1+1` (fuori dal repo, non versionato). Per build future: `export JAVA_HOME=".../jdk21/jdk-21.0.12.1+1"` prima di `./gradlew`. Il JDK 25 di sistema resta quello di default, non toccato.
 - Keystore e credenziali in `keystore-privato/` e `android/keystore.properties`, entrambi in `.gitignore` — **da conservare con cura**: perderli impedirebbe di pubblicare aggiornamenti futuri con lo stesso certificato.
+- Per rigenerare gli asset store in futuro: erano generati con uno script Node temporaneo usando `sharp` (già rimosso dopo l'uso, non serve conservarlo — i PNG finali sono in `docs/store-assets/`).
+- Per debug futuro via Chrome DevTools Protocol su WebView: installare l'APK **debug** (non release, che non è debuggable), poi `adb forward tcp:9222 localabstract:webview_devtools_remote_<PID>` e usare `Runtime.evaluate` via websocket — molto più affidabile dei tap ADB su questo emulatore.
