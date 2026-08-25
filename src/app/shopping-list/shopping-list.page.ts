@@ -39,14 +39,18 @@ export class ShoppingListPage implements OnInit, OnDestroy {
   get pendingItems(): ShoppingItem[] { return this.items.filter(i => !i.checked); }
   get checkedItems(): ShoppingItem[]  { return this.items.filter(i => i.checked); }
   get hasSuggestions(): boolean {
-    return this.productService.getAll().some(p =>
-      p.lowStockThreshold !== null && p.quantity <= (p.lowStockThreshold ?? 0)
-    );
+    return this.suggestedProducts.length > 0;
   }
 
   get suggestedProducts() {
-    return this.productService.getAll()
-      .filter(p => p.lowStockThreshold !== null && p.quantity <= (p.lowStockThreshold ?? 0))
+    const lowStock = this.productService.getAll()
+      .filter(p => p.lowStockThreshold !== null && p.quantity <= (p.lowStockThreshold ?? 0));
+    const expired = this.productService.getExpired();
+
+    const byId = new Map<string, typeof lowStock[number]>();
+    for (const p of [...lowStock, ...expired]) byId.set(p.id, p);
+
+    return Array.from(byId.values())
       .filter(p => !this.items.some(i => i.linkedProductId === p.id && !i.checked));
   }
 
