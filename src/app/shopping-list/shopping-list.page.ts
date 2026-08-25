@@ -5,7 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { ShoppingItem } from '../models/shopping-item.model';
 import { ShoppingService } from '../services/shopping.service';
 import { ProductService } from '../services/product.service';
-import { DEFAULT_CATEGORIES } from '../models/category.model';
+import { CategoryService } from '../services/category.service';
 
 @Component({
   selector: 'app-shopping-list',
@@ -21,6 +21,7 @@ export class ShoppingListPage implements OnInit, OnDestroy {
   constructor(
     private shoppingService: ShoppingService,
     private productService: ProductService,
+    private categoryService: CategoryService,
     private alertCtrl: AlertController,
   ) {}
 
@@ -50,7 +51,7 @@ export class ShoppingListPage implements OnInit, OnDestroy {
   }
 
   getEmoji(categoryId: string): string {
-    return DEFAULT_CATEGORIES.find(c => c.id === categoryId)?.emoji ?? '📦';
+    return this.categoryService.getById(categoryId)?.emoji ?? '📦';
   }
 
   trackById(_: number, item: ShoppingItem): string { return item.id; }

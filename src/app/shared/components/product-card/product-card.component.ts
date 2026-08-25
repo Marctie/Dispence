@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Product, LOCATION_LABELS } from '../../../models/product.model';
-import { DEFAULT_CATEGORIES } from '../../../models/category.model';
+import { CategoryService } from '../../../services/category.service';
 
 @Component({
   selector: 'app-product-card',
@@ -14,8 +14,10 @@ export class ProductCardComponent {
   @Output() editClick = new EventEmitter<void>();
   @Output() deleteClick = new EventEmitter<void>();
 
+  constructor(private categoryService: CategoryService) {}
+
   get emoji(): string {
-    return DEFAULT_CATEGORIES.find(c => c.id === this.product.category)?.emoji ?? '📦';
+    return this.categoryService.getById(this.product.category)?.emoji ?? '📦';
   }
 
   get locationLabel(): string {

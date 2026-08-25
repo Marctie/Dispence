@@ -37,6 +37,19 @@
   text-overflow: ellipsis;
 }
 
+.demo-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: var(--ion-color-warning-shade, #b26a00);
+  background: var(--ion-color-warning-tint, #ffe0b2);
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-inline-start: 6px;
+  vertical-align: middle;
+}
+
 .card-meta {
   display: flex;
   align-items: center;

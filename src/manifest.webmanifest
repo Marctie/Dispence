@@ -1,9 +1,9 @@
 {
-  "name": "Dispensa Alimentare",
-  "short_name": "Dispensa",
+  "name": "Dispensina Digitale",
+  "short_name": "Dispensina",
   "description": "Gestisci la tua dispensa e riduci gli sprechi alimentari.",
-  "start_url": "/Dispence/",
-  "scope": "/Dispence/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#1a2a1e",

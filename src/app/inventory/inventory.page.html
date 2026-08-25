@@ -32,6 +32,49 @@
     }
   </div>
 
+  <div class="location-filter">
+    <button
+      class="filter-chip"
+      [class.filter-chip--active]="activeExpiry === 'all'"
+      (click)="activeExpiry = 'all'"
+      type="button">
+      Tutte le scadenze
+    </button>
+    <button
+      class="filter-chip"
+      [class.filter-chip--active]="activeExpiry === 'expiring'"
+      (click)="activeExpiry = 'expiring'"
+      type="button">
+      In scadenza
+    </button>
+    <button
+      class="filter-chip"
+      [class.filter-chip--active]="activeExpiry === 'expired'"
+      (click)="activeExpiry = 'expired'"
+      type="button">
+      Scaduti
+    </button>
+  </div>
+
+  <div class="location-filter">
+    <button
+      class="filter-chip"
+      [class.filter-chip--active]="activeCategory === 'all'"
+      (click)="activeCategory = 'all'"
+      type="button">
+      Tutte le categorie
+    </button>
+    @for (cat of categories; track cat.id) {
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="activeCategory === cat.id"
+        (click)="activeCategory = cat.id"
+        type="button">
+        {{ cat.emoji }} {{ cat.name }}
+      </button>
+    }
+  </div>
+
   @if (filteredProducts.length > 0) {
     <div class="product-list">
       @for (product of filteredProducts; track product.id) {

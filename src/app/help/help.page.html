@@ -1,0 +1,23 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/settings"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Guida e FAQ</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-accordion-group>
+    @for (faq of faqs; track faq.question) {
+      <ion-accordion [value]="faq.question">
+        <ion-item slot="header" color="light">
+          <ion-label>{{ faq.question }}</ion-label>
+        </ion-item>
+        <div class="ion-padding" slot="content">
+          {{ faq.answer }}
+        </div>
+      </ion-accordion>
+    }
+  </ion-accordion-group>
+</ion-content>

@@ -6,7 +6,7 @@ import { Product } from '../models/product.model';
 import { ProductService } from '../services/product.service';
 import { ShoppingService } from '../services/shopping.service';
 import { AddProductComponent } from '../add-product/add-product.component';
-import { DEFAULT_CATEGORIES } from '../models/category.model';
+import { CategoryService } from '../services/category.service';
 
 @Component({
   selector: 'app-home',
@@ -21,6 +21,7 @@ export class HomePage implements OnInit, OnDestroy {
   constructor(
     private productService: ProductService,
     private shoppingService: ShoppingService,
+    private categoryService: CategoryService,
     private modalCtrl: ModalController,
   ) {}
 
@@ -52,7 +53,7 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   getEmoji(categoryId: string): string {
-    return DEFAULT_CATEGORIES.find(c => c.id === categoryId)?.emoji ?? '📦';
+    return this.categoryService.getById(categoryId)?.emoji ?? '📦';
   }
 
   addToShoppingList(product: Product): void {

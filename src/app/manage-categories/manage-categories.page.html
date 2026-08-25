@@ -1,0 +1,39 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/settings"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Categorie</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="addCategory()">
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-list inset="true">
+    @for (cat of categories; track cat.id) {
+      <ion-item-sliding>
+        <ion-item button="true" (click)="editCategory(cat)">
+          <div slot="start" class="cat-emoji" [style.background]="cat.color + '33'">{{ cat.emoji }}</div>
+          <ion-label>
+            <h3>{{ cat.name }}</h3>
+            @if (!isCustom(cat)) {
+              <p>Predefinita</p>
+            }
+          </ion-label>
+        </ion-item>
+        @if (isCustom(cat)) {
+          <ion-item-options side="end">
+            <ion-item-option color="danger" (click)="deleteCategory(cat)">
+              <ion-icon name="trash-outline" slot="icon-only"></ion-icon>
+            </ion-item-option>
+          </ion-item-options>
+        }
+      </ion-item-sliding>
+    }
+  </ion-list>
+  <p class="hint">Le categorie predefinite sono di sola lettura. Tocca "+" per crearne una personalizzata, oppure scorri una categoria personalizzata per eliminarla.</p>
+</ion-content>

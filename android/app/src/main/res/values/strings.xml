@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dispensina Digitale</string>
+    <string name="title_activity_main">Dispensina Digitale</string>
+    <string name="package_name">com.dispensinadigitale.app</string>
+    <string name="custom_url_scheme">com.dispensinadigitale.app</string>
+</resources>

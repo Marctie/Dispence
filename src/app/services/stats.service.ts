@@ -53,6 +53,16 @@ export class StatsService {
     ].filter(b => b.count > 0);
   }
 
+  /** Valore economico dei prodotti scaduti tuttora in dispensa (solo se il prezzo è stato inserito). */
+  wastedValue(): number {
+    return this.productService.getExpired()
+      .reduce((sum, p) => sum + (p.price ?? 0) * p.quantity, 0);
+  }
+
+  mostRepurchased(limit = 5): { name: string; count: number }[] {
+    return this.productService.mostRepurchased(limit);
+  }
+
   totalProducts(): number { return this.productService.getAll().length; }
   totalExpired(): number  { return this.productService.getExpired().length; }
   totalExpiring(): number { return this.productService.getExpiringWithinDays(7).length; }

@@ -3,6 +3,7 @@ export interface Category {
   name: string;
   emoji: string;
   color: string;
+  custom?: boolean;
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [

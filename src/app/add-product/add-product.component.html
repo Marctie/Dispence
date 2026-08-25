@@ -14,6 +14,15 @@
 
 <ion-content class="form-content">
 
+  @if (canScan && !isEditMode) {
+    <div class="form-section">
+      <ion-button expand="block" fill="outline" (click)="scanBarcode()" [disabled]="scanning">
+        <ion-icon name="barcode-outline" slot="start"></ion-icon>
+        {{ scanning ? 'Scansione in corso...' : 'Scansiona codice a barre' }}
+      </ion-button>
+    </div>
+  }
+
   <div class="form-section">
     <p class="form-label">Nome *</p>
     <ion-input
@@ -83,6 +92,11 @@
         inputmode="numeric">
       </ion-input>
     }
+  </div>
+
+  <div class="form-section">
+    <p class="form-label">Prezzo (opzionale)</p>
+    <ion-input class="form-input" type="number" [(ngModel)]="price" min="0" inputmode="decimal" placeholder="€"></ion-input>
   </div>
 
   <div class="form-section">

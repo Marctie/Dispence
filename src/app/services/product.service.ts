@@ -6,11 +6,14 @@ import { StorageService } from './storage.service';
 @Injectable({ providedIn: 'root' })
 export class ProductService {
   private readonly KEY = 'dispensa_products';
+  private readonly PURCHASE_HISTORY_KEY = 'dispensa_purchase_history';
   private products$ = new BehaviorSubject<Product[]>([]);
+  private purchaseHistory: Record<string, { name: string; count: number }> = {};
 
   constructor(private storage: StorageService) {
     const saved = this.storage.get<Product[]>(this.KEY) ?? [];
     this.products$.next(saved);
+    this.purchaseHistory = this.storage.get<Record<string, { name: string; count: number }>>(this.PURCHASE_HISTORY_KEY) ?? {};
   }
 
   getAll$(): Observable<Product[]> {
@@ -21,6 +24,19 @@ export class ProductService {
     return this.products$.value;
   }
 
+  replaceAll(products: Product[]): void {
+    this.save(products);
+  }
+
+  getPurchaseHistory(): Record<string, { name: string; count: number }> {
+    return this.purchaseHistory;
+  }
+
+  replacePurchaseHistory(history: Record<string, { name: string; count: number }>): void {
+    this.purchaseHistory = history;
+    this.storage.set(this.PURCHASE_HISTORY_KEY, history);
+  }
+
   add(data: Omit<Product, 'id' | 'addedAt'>): void {
     const product: Product = {
       ...data,
@@ -28,6 +44,24 @@ export class ProductService {
       addedAt: new Date().toISOString(),
     };
     this.save([...this.products$.value, product]);
+    if (!data.isDemo) this.trackPurchase(product.name);
+  }
+
+  /** Nomi dei prodotti più spesso aggiunti alla dispensa, in ordine decrescente. */
+  mostRepurchased(limit = 5): { name: string; count: number }[] {
+    return Object.values(this.purchaseHistory)
+      .filter(e => e.count > 1)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  }
+
+  private trackPurchase(name: string): void {
+    const trimmed = name.trim();
+    const key = trimmed.toLowerCase();
+    if (!key) return;
+    const existing = this.purchaseHistory[key];
+    this.purchaseHistory[key] = { name: trimmed, count: (existing?.count ?? 0) + 1 };
+    this.storage.set(this.PURCHASE_HISTORY_KEY, this.purchaseHistory);
   }
 
   update(id: string, changes: Partial<Product>): void {

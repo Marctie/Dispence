@@ -9,6 +9,9 @@ export interface Product {
   notes: string;
   addedAt: string;
   lowStockThreshold: number | null;
+  price: number | null;
+  barcode?: string | null;
+  isDemo?: boolean;
 }
 
 export type Location = 'pantry' | 'fridge' | 'freezer';

@@ -9,7 +9,12 @@
   <span class="category-emoji" aria-hidden="true">{{ emoji }}</span>
 
   <div class="card-info">
-    <p class="product-name">{{ product.name }}</p>
+    <p class="product-name">
+      {{ product.name }}
+      @if (product.isDemo) {
+        <span class="demo-badge">Esempio</span>
+      }
+    </p>
     <div class="card-meta">
       <span class="location-chip">{{ locationLabel }}</span>
       <span class="quantity">{{ product.quantity }} {{ product.unit }}</span>

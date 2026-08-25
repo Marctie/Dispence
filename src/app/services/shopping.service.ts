@@ -16,6 +16,8 @@ export class ShoppingService {
   getAll$(): Observable<ShoppingItem[]> { return this.items$.asObservable(); }
   getAll(): ShoppingItem[] { return this.items$.value; }
 
+  replaceAll(items: ShoppingItem[]): void { this.save(items); }
+
   add(data: Pick<ShoppingItem, 'name' | 'quantity' | 'unit' | 'category'>): void {
     const existing = this.items$.value.find(
       i => i.name.toLowerCase() === data.name.toLowerCase() && !i.checked
