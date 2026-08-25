@@ -19,6 +19,7 @@ android/key.properties
 *.jks
 *.keystore
 keystore.properties
+keystore-privato/
 
 # Environment / secrets
 .env
@@ -36,3 +37,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Screenshot di test/debug (non da store, generati durante le sessioni di verifica)
+docs/screenshots/

@@ -30,8 +30,16 @@ export class AppComponent implements OnInit {
     // ThemeService si inizializza nel costruttore, qui solo onboarding
     this.showOnboarding = !this.preferencesService.isOnboardingDone();
 
-    await this.setupNotificationChannel();
-    await this.backupService.runSilentAutoBackup();
+    try {
+      await this.setupNotificationChannel();
+    } catch (e) {
+      console.error('Impossibile creare il canale di notifica', e);
+    }
+    try {
+      await this.backupService.runSilentAutoBackup();
+    } catch (e) {
+      console.error('Backup automatico silenzioso non riuscito', e);
+    }
 
     combineLatest([this.productService.getAll$(), this.preferencesService.get$()])
       .pipe(debounceTime(300))
@@ -45,8 +53,16 @@ export class AppComponent implements OnInit {
   }
 
   onOnboardingDone(): void {
-    this.preferencesService.markOnboardingDone();
-    this.demoDataService.seedIfEmpty();
+    try {
+      this.preferencesService.markOnboardingDone();
+    } catch (e) {
+      console.error('Impossibile salvare il completamento onboarding', e);
+    }
+    try {
+      this.demoDataService.seedIfEmpty();
+    } catch (e) {
+      console.error('Impossibile precaricare i dati di esempio', e);
+    }
     this.showOnboarding = false;
   }
 

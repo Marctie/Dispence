@@ -14,7 +14,7 @@ export class OnboardingComponent {
   readonly steps = [
     {
       emoji: '🥦',
-      title: 'Benvenuto in Dispensa',
+      title: 'Benvenuto in Dispensina Digitale',
       text: 'Tieni traccia di tutto quello che hai in casa: frigo, dispensa e freezer in un\'unica app.',
     },
     {
