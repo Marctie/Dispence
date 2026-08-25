@@ -25,18 +25,18 @@ App Ionic/Angular + Capacitor per la gestione della dispensa domestica. Ribattez
 - [x] Progetto nativo Android creato (`npx cap add android`), permessi camera/notifiche in AndroidManifest
 
 ## Da fare — funzionalità core
-- [ ] Icone app/launcher Android e splash ancora placeholder di default Capacitor: da rigenerare dal logo esistente (`src/assets/icon/icon-512.svg`, già originale/a tema dispensa) con `@capacitor/assets`
-- [ ] Test manuali approfonditi di scanner barcode + notifiche su emulatore reale
+- [x] Icone app/launcher Android e splash rigenerate dal logo esistente (`resources/*.svg`, tema dispensa originale) con `@capacitor/assets` — completato
+- [ ] Test manuali approfonditi di scanner barcode + notifiche su emulatore reale (bloccato: serve una build compilabile, vedi problema JDK sotto)
 
 ## Problemi noti
-- **JDK di sistema incompatibile**: la macchina ha solo JDK 25 installato, non supportato da Gradle/AGP per la build Android (`Unsupported class file major version 69`). Installazione di Temurin JDK 21 in corso via winget (dedicato solo alle build Android, JDK 25 lasciato intatto per il resto).
+- **JDK di sistema incompatibile**: la macchina ha solo JDK 25 installato, non supportato da Gradle/AGP per la build Android (`Unsupported class file major version 69`). L'installazione di Temurin JDK 21 via winget fallisce ripetutamente con errore Windows Installer 1618 ("un'altra installazione è già in corso") — mutex di sistema bloccato, probabilmente da un Windows Update pendente. **Serve un riavvio del PC** da parte dell'utente prima di ritentare l'installazione JDK 21. Nessun'altra azione è possibile lato codice finché questo non si sblocca: build Android, keystore/firma e test su emulatore sono tutti in attesa di questo.
 
 ## Da fare — pubblicazione
-- [ ] Generare keystore, configurare signingConfig, build firmata (`bundleRelease`), verifica firma con apksigner/openssl
-- [ ] Test su emulatore Android reale (screenshot via adb), in particolare barcode scanner e notifiche locali
-- [ ] Privacy policy IT+EN pubblicata su `Marctie/DispenceAi-privacy` via GitHub Pages
-- [ ] Data Safety form e content rating per Play Console
-- [ ] `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md` con testi scheda store pronti
+- [ ] (bloccato da JDK) Generare keystore, configurare signingConfig, build firmata (`bundleRelease`), verifica firma con apksigner/openssl
+- [ ] (bloccato da JDK) Test su emulatore Android reale (screenshot via adb), in particolare barcode scanner e notifiche locali
+- [x] Privacy policy IT+EN scritta e pubblicata (push) su `Marctie/DispenceAi-privacy` — **manca ancora l'abilitazione manuale di GitHub Pages nelle impostazioni del repository** (Settings → Pages → Source: main branch), operazione che l'utente deve fare perché richiede accesso non disponibile via API senza token
+- [x] Data Safety form e content rating: risposte pronte in `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md`
+- [x] `docs/GUIDA_PUBBLICAZIONE_PLAY_STORE.md` con testi scheda store pronti (nome, descrizioni, categoria, permessi, checklist)
 
 ## Backlog (richieste future, non prioritarie ora)
 _(vuoto per ora)_
