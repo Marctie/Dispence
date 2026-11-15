@@ -30,6 +30,10 @@ Tutti usano lo **stesso account** e vedono gli stessi dati.
 
 **Primo accesso.** All'apertura compare la schermata *Accedi*. La prima volta tocca *Non hai un account? Registrati*, inserisci email e una password di almeno 8 caratteri: entri subito, senza email di conferma. Le volte successive l'accesso resta salvato.
 
+**Codice di recupero (importante).** Subito dopo la registrazione l'app mostra il tuo **codice di recupero** (es. `ABCD-EFGH-JKLM-NPQR`): **salvalo** (Copia, Salva/invia, o uno screenshot). Serve per reimpostare la password se la dimentichi, senza bisogno di email. Puoi crearne uno nuovo in qualsiasi momento da *Impostazioni → Account → Codice di recupero* (il vecchio smette di valere). Chi aveva già un account prima di questa funzione riceve un invito a crearlo al primo accesso.
+
+**Prodotti di esempio (da eliminare al primo avvio).** Dopo la presentazione iniziale l'app inserisce alcuni prodotti di esempio per mostrarti come funziona: in Home compare un avviso **"Questi sono prodotti di esempio"** con il pulsante **Elimina i prodotti di esempio**. Toccalo quando hai dato un'occhiata, prima di iniziare con i tuoi prodotti (si può fare anche da *Impostazioni → Backup e dati*). I prodotti di esempio non vengono mai portati in una dispensa condivisa.
+
 **Schede principali**
 - **Home**: riepilogo dei prodotti in scadenza, scaduti e sotto scorta.
 - **Dispensa**: tutti i prodotti, con filtri per posizione (dispensa, frigo, freezer), categoria e scadenza. Con il **+** in alto aggiungi un prodotto (su Android puoi anche scansionare il codice a barre). Tocca un prodotto per modificarlo.
@@ -40,6 +44,8 @@ Tutti usano lo **stesso account** e vedono gli stessi dati.
 **Scorta minima.** Quando aggiungi o modifichi un prodotto puoi attivare la *scorta minima*: se la quantità scende sotto quel valore, il prodotto viene suggerito nella lista della spesa e, se vuoi, ricevi una notifica.
 
 **Backup.** In *Impostazioni → Backup e dati* puoi esportare un file con tutti i dati e ripristinarlo. Con l'account i dati sono comunque già salvati online e li ritrovi su ogni dispositivo.
+
+**Password dimenticata.** Nella schermata di accesso tocca *Password dimenticata?*, inserisci email, **codice di recupero** e la nuova password: entri subito e ricevi un nuovo codice da salvare (quello usato non vale più). Dopo 5 tentativi sbagliati in un'ora il recupero per quell'email si blocca per un'ora. In alternativa c'è *Ricevi un link via email* (funziona per tutti solo dopo aver collegato un servizio email, vedi sezione 9).
 
 **Uscire / eliminare l'account.** *Impostazioni → Account → Esci* (i dati restano nell'account e vengono tolti da quel telefono) oppure *Elimina account* (cancellazione definitiva).
 
@@ -144,7 +150,7 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 | Android: nessuna notifica | Impostazioni Android → App → Dispensina → Notifiche: consenti e controlla i due canali; disattiva il risparmio energetico aggressivo per l'app |
 | "Salvataggio online non riuscito, riproverò" | Problema di rete temporaneo: i dati sono al sicuro sul telefono e vengono inviati al prossimo tentativo |
 | Codice invito non valido | Il proprietario potrebbe averlo rigenerato: fatti mandare quello nuovo |
-| Password dimenticata | Funziona solo dopo aver configurato l'invio email (SMTP) in Supabase, vedi `docs/SETUP_LOGIN_SUPABASE.md`; nel frattempo contatta lo sviluppatore |
+| Password dimenticata | *Password dimenticata?* → email + codice di recupero + nuova password. Senza codice: il link via email arriva solo se è configurato un servizio email (SMTP) in Supabase (`docs/SETUP_LOGIN_SUPABASE.md`); altrimenti lo sviluppatore può reimpostarla dalla dashboard Supabase (Authentication → Users) |
 
 ---
 
@@ -174,7 +180,9 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 
 **Database** (`supabase/schema.sql`, rieseguibile): `pantries` (data jsonb, version, invite_code), `pantry_members` (un account = una dispensa; ruoli owner/member), `user_settings` (prefs, timezone, last_daily_push), `push_subscriptions`. RLS su tutto, permessi per colonna (i membri possono cambiare solo `data`/`version` e il proprio nome), funzioni `security definer`: `my_pantry`, `join_pantry`, `leave_pantry`, `regenerate_invite_code`, `remove_member`, `delete_my_account`.
 
-**Funzioni server** (`supabase/functions`, Deno): `notify-additions` (push agli altri membri, rispettando le loro preferenze), `push-test`, `daily-reminders` (chiamata da pg_cron ogni 15 minuti con un segreto nel Vault; invia una volta al giorno all'orario dell'utente nel suo fuso orario). Segreti delle funzioni: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET` (copia locale in `keystore-privato/supabase-push-secrets.json`, mai su git).
+**Recupero password** (`supabase/recovery.sql` + funzione `recover-password`): codice personale di 16 caratteri salvato solo come hash bcrypt (`recovery_codes`, nessun accesso dai client), verifica e limite di 5 tentativi falliti/ora per email (`recovery_attempts`) in funzioni `security definer` eseguibili solo dal server; la funzione imposta la nuova password con l'API admin e sostituisce il codice usato.
+
+**Funzioni server** (`supabase/functions`, Deno): `recover-password`, `notify-additions` (push agli altri membri, rispettando le loro preferenze), `push-test`, `daily-reminders` (chiamata da pg_cron ogni 15 minuti con un segreto nel Vault; invia una volta al giorno all'orario dell'utente nel suo fuso orario). Segreti delle funzioni: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET` (copia locale in `keystore-privato/supabase-push-secrets.json`, mai su git).
 
 **Test**: `npx ng test --watch=false --browsers=ChromeHeadless` — unione dati, pianificatore notifiche, sincronizzazione condivisa con un finto Supabase (concorrenza, cancellazioni, lista spesa, isolamento tra account), backup, categorie.
 
@@ -190,7 +198,7 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 | Build Android | `npm run build:prod` → `npx cap sync android` → in `android/`: `gradlew assembleRelease` (APK) o `bundleRelease` (AAB) con `JAVA_HOME` = JDK 21 portable in `..\..\jdk21\jdk-21.0.12.1+1` |
 | Firma Android | `keystore-privato/` + `android/keystore.properties` (percorso relativo), **mai su git, da conservare**: senza non si possono pubblicare aggiornamenti |
 | Versione Android | `android/app/build.gradle` (`versionCode` +1 a ogni pubblicazione) |
-| Schema database | `supabase/schema.sql` nel SQL Editor di Supabase |
+| Schema database | `supabase/schema.sql`, poi `supabase/recovery.sql` nel SQL Editor di Supabase |
 | Cron avvisi | `supabase/cron.sql` (sostituire `__CRON_SECRET__`) |
 | Funzioni server | `SUPABASE_ACCESS_TOKEN=sbp_… node scripts/deploy-functions.mjs` |
 | Configurazione Supabase / email | `docs/SETUP_LOGIN_SUPABASE.md` |
