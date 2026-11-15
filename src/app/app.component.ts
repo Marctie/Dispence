@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { combineLatest, debounceTime } from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
@@ -11,6 +11,7 @@ import { CHANNEL_EXPIRY, CHANNEL_PANTRY, NotificationService } from './services/
 import { DemoDataService } from './services/demo-data.service';
 import { AuthService } from './services/auth.service';
 import { SyncService } from './services/sync.service';
+import { TelemetryService } from './services/telemetry.service';
 
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
 
@@ -25,6 +26,7 @@ export class AppComponent implements OnInit {
   /** Con gli account attivi: schermata di accesso finché non c'è un utente. */
   showAuth = false;
   passwordRecovery = false;
+  private telemetry = inject(TelemetryService);
 
   constructor(
     private preferencesService: PreferencesService,
@@ -99,6 +101,7 @@ export class AppComponent implements OnInit {
     } catch (e) {
       console.error('Impossibile precaricare i dati di esempio', e);
     }
+    this.telemetry.track('onboarding_completato');
     this.showOnboarding = false;
   }
 

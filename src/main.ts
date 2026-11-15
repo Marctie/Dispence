@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { AppModule } from './app/app.module';
 import { AUTH_HASH_KEY } from './app/services/auth.service';
+import { TelemetryService } from './app/services/telemetry.service';
 
 // Link da email (conferma account / reimposta password): il router Angular cancellerebbe il
 // frammento #access_token=..., quindi lo salviamo prima dell'avvio e ripuliamo l'indirizzo.
@@ -12,7 +13,10 @@ if (/(access_token|error_description)=/.test(location.hash)) {
 }
 
 platformBrowserDynamic().bootstrapModule(AppModule)
-  .catch(err => console.log(err));
+  .catch(err => {
+    console.log(err);
+    TelemetryService.reportBootstrapError(err);
+  });
 
 // PWA (solo web, es. GitHub Pages / iPhone): nell'app nativa il service worker non serve.
 if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator && location.protocol === 'https:') {

@@ -1,12 +1,15 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Category, DEFAULT_CATEGORIES } from '../models/category.model';
 import { StorageService } from './storage.service';
+import { TelemetryService } from './telemetry.service';
 
 const CUSTOM_CATEGORIES_KEY = 'dispensa_custom_categories';
 
 @Injectable({ providedIn: 'root' })
 export class CategoryService {
+  /** Solo il tipo di azione (mai il nome della categoria). */
+  private telemetry = inject(TelemetryService);
   private customCategories$ = new BehaviorSubject<Category[]>([]);
   private all$ = new BehaviorSubject<Category[]>(DEFAULT_CATEGORIES);
 
@@ -29,6 +32,7 @@ export class CategoryService {
     const category: Category = { id, name, emoji, color, custom: true };
     const next = [...this.customCategories$.value, category];
     this.persist(next);
+    this.telemetry.track('categoria_aggiunta');
     return category;
   }
 
@@ -37,6 +41,7 @@ export class CategoryService {
     if (!existing) throw new Error('Solo le categorie personalizzate possono essere modificate');
     const next = this.customCategories$.value.map(c => c.id === id ? { ...c, ...changes } : c);
     this.persist(next);
+    this.telemetry.track('categoria_modificata');
   }
 
   delete(id: string): void {
@@ -44,6 +49,7 @@ export class CategoryService {
     if (!existing) throw new Error('Solo le categorie personalizzate possono essere eliminate');
     const next = this.customCategories$.value.filter(c => c.id !== id);
     this.persist(next);
+    this.telemetry.track('categoria_eliminata');
   }
 
   isCustom(id: string): boolean {

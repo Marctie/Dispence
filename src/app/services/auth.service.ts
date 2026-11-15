@@ -3,6 +3,7 @@ import { BehaviorSubject } from 'rxjs';
 import { Capacitor } from '@capacitor/core';
 import { AuthError, createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
+import { TelemetryService } from './telemetry.service';
 
 /** Chiave in sessionStorage dove main.ts salva il frammento #access_token=... prima che il router lo cancelli. */
 export const AUTH_HASH_KEY = 'dispensa_auth_hash';
@@ -15,6 +16,8 @@ const KEEP_ON_LOGOUT = new Set(['dispensa_theme']);
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private client: SupabaseClient | null = null;
+
+  constructor(private telemetry: TelemetryService) {}
 
   readonly user$ = new BehaviorSubject<User | null>(null);
   /** True quando l'utente arriva dal link "reimposta password" e deve sceglierne una nuova. */
@@ -55,19 +58,27 @@ export class AuthService {
 
     this.client.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY') this.passwordRecovery$.next(true);
+      this.telemetry.setSession(session?.user ?? null, session?.access_token ?? null);
       this.user$.next(session?.user ?? null);
     });
 
     await this.consumeEmailLink();
 
     const { data } = await this.client.auth.getSession();
+    this.telemetry.setSession(data.session?.user ?? null, data.session?.access_token ?? null);
     this.user$.next(data.session?.user ?? null);
     return this.user;
   }
 
   async signIn(email: string, password: string): Promise<void> {
-    const { error } = await this.supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) throw new Error(this.translate(error));
+    const { data, error } = await this.supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) {
+      // Solo il codice tecnico, mai l'email digitata.
+      this.telemetry.track('login_fallito', { codice: error.code ?? 'sconosciuto' });
+      throw new Error(this.translate(error));
+    }
+    this.telemetry.setSession(data.user, data.session?.access_token ?? null);
+    this.telemetry.track('login');
   }
 
   /** @returns true se serve confermare l'email prima di poter accedere. */
@@ -82,6 +93,8 @@ export class AuthService {
     if (data.user && data.user.identities?.length === 0) {
       throw new Error('Esiste già un account con questa email. Prova ad accedere.');
     }
+    if (data.session) this.telemetry.setSession(data.user, data.session.access_token);
+    this.telemetry.track('registrazione', { conferma_email: !data.session });
     return !data.session;
   }
 
@@ -90,17 +103,22 @@ export class AuthService {
       redirectTo: this.siteUrl(),
     });
     if (error) throw new Error(this.translate(error));
+    this.telemetry.track('password_reset_richiesto');
   }
 
   async updatePassword(password: string): Promise<void> {
     const { error } = await this.supabase.auth.updateUser({ password });
     if (error) throw new Error(this.translate(error));
+    this.telemetry.track('password_cambiata');
     this.passwordRecovery$.next(false);
   }
 
   /** Esce dall'account e cancella dal dispositivo tutti i dati della dispensa. */
   async signOut(): Promise<void> {
     try {
+      // Il logout va inviato finché la sessione è valida (attesa massima 2 s; se non parte resta in coda).
+      this.telemetry.track('logout');
+      await this.telemetry.flush(2000);
       await this.supabase.auth.signOut();
     } finally {
       this.clearLocalData();
@@ -112,6 +130,7 @@ export class AuthService {
   async deleteAccount(): Promise<void> {
     const { error } = await this.supabase.rpc('delete_my_account');
     if (error) throw new Error('Eliminazione non riuscita, riprova più tardi');
+    this.telemetry.track('account_eliminato');
     await this.signOut();
   }
 

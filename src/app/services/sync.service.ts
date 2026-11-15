@@ -1,10 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Subject, Subscription, debounceTime, filter, tap } from 'rxjs';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { AuthService } from './auth.service';
 import { BackupService } from './backup.service';
 import { PreferencesService } from './preferences.service';
 import { StorageService } from './storage.service';
+import { TelemetryService } from './telemetry.service';
 import { EMPTY_SHARED, SharedData, addedProducts, mergeShared, normalize, sharedEquals } from './merge.util';
 
 const OWNER_KEY = 'dispensa_sync_owner';
@@ -77,6 +78,7 @@ export class SyncService {
   private again = false;
   private subs: Subscription[] = [];
   private channel: RealtimeChannel | null = null;
+  private telemetry = inject(TelemetryService);
 
   constructor(
     private auth: AuthService,
@@ -167,18 +169,21 @@ export class SyncService {
     if (local.products.some(p => p.isDemo)) {
       this.applyShared({ ...local, products: local.products.filter(p => !p.isDemo) });
     }
+    this.telemetry.track('dispensa_condivisa_entrato');
     await this.switchPantry(data as string);
   }
 
   async leavePantry(): Promise<void> {
     const { data, error } = await this.auth.supabase.rpc('leave_pantry', { p_display_name: this.auth.displayName });
     if (error) throw new Error('Non è stato possibile uscire dalla dispensa, riprova');
+    this.telemetry.track('dispensa_condivisa_uscito');
     await this.switchPantry(data as string);
   }
 
   async regenerateInviteCode(): Promise<void> {
     const { data, error } = await this.auth.supabase.rpc('regenerate_invite_code');
     if (error) throw new Error('Solo chi ha creato la dispensa può cambiare il codice');
+    this.telemetry.track('invito_rigenerato');
     const p = this.pantry$.value;
     if (p) this.pantry$.next({ ...p, inviteCode: data as string });
   }
@@ -186,6 +191,7 @@ export class SyncService {
   async removeMember(userId: string): Promise<void> {
     const { error } = await this.auth.supabase.rpc('remove_member', { p_user_id: userId });
     if (error) throw new Error('Non è stato possibile rimuovere il membro');
+    this.telemetry.track('dispensa_membro_rimosso');
     await this.loadMembers();
   }
 
@@ -244,7 +250,7 @@ export class SyncService {
           .select('data, version, updated_by')
           .eq('id', pantryId)
           .maybeSingle<PantryRow>();
-        if (error) { this.status$.next('error'); return; }
+        if (error) { this.telemetry.captureError(error, 'sync', { fase: 'lettura' }); this.status$.next('error'); return; }
         if (!row) {
           // Non siamo più membri (es. rimossi dal proprietario): si torna alla propria dispensa.
           this.pantry$.next(null);
@@ -272,7 +278,7 @@ export class SyncService {
             .eq('id', pantryId)
             .eq('version', row.version)
             .select('version');
-          if (saveError) { this.status$.next('error'); return; }
+          if (saveError) { this.telemetry.captureError(saveError, 'sync', { fase: 'salvataggio' }); this.status$.next('error'); return; }
           if (!saved?.length) continue;          // qualcuno ha salvato nel frattempo: si riprova
           version = row.version + 1;
           this.notifyAdditions(addedProducts(remote, merged).map(p => p.name));
@@ -284,6 +290,7 @@ export class SyncService {
         this.status$.next('synced');
         return;
       }
+      this.telemetry.captureError('Salvataggio in conflitto per 4 volte di seguito', 'sync', { fase: 'conflitti' });
       this.status$.next('error');
     } catch (e) {
       console.error('Sincronizzazione non riuscita', e);

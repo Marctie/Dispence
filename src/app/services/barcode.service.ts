@@ -1,7 +1,8 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { BarcodeCacheService } from './barcode-cache.service';
+import { TelemetryService } from './telemetry.service';
 
 export interface BarcodeLookupResult {
   barcode: string;
@@ -13,6 +14,9 @@ export interface BarcodeLookupResult {
 
 @Injectable({ providedIn: 'root' })
 export class BarcodeService {
+  /** Solo l'esito della scansione, mai il codice letto. */
+  private telemetry = inject(TelemetryService);
+
   constructor(private cache: BarcodeCacheService) {}
 
   get isSupported(): boolean {
@@ -29,10 +33,15 @@ export class BarcodeService {
   async scanOnce(): Promise<string | null> {
     if (!this.isSupported) return null;
     const granted = await this.ensurePermission();
-    if (!granted) throw new Error('Permesso fotocamera negato');
+    if (!granted) {
+      this.telemetry.track('scansione_barcode', { esito: 'permesso_negato' });
+      throw new Error('Permesso fotocamera negato');
+    }
 
     const { barcodes } = await BarcodeScanner.scan();
-    return barcodes.length > 0 ? (barcodes[0].rawValue ?? null) : null;
+    const code = barcodes.length > 0 ? (barcodes[0].rawValue ?? null) : null;
+    this.telemetry.track('scansione_barcode', { esito: code ? 'letto' : 'annullato' });
+    return code;
   }
 
   async lookup(barcode: string): Promise<BarcodeLookupResult> {
