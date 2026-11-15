@@ -23,7 +23,7 @@ export class HelpPage {
     },
     {
       question: 'Come ricevo le notifiche di scadenza?',
-      answer: 'Dalle Impostazioni puoi attivare le notifiche e scegliere con quanti giorni di anticipo vuoi essere avvisato. Le notifiche sono generate localmente sul dispositivo, non richiedono connessione e non passano da server esterni.',
+      answer: 'Dalle Impostazioni puoi attivare le notifiche e scegliere con quanti giorni di anticipo vuoi essere avvisato. Le notifiche sono generate localmente sul dispositivo, non richiedono connessione e non passano da server esterni. Su iPhone (versione web) aggiungi prima l’app alla schermata Home da Safari: riceverai un riepilogo dei prodotti in scadenza all’apertura dell’app e il numero comparirà sull’icona.',
     },
     {
       question: 'Posso creare categorie personalizzate?',

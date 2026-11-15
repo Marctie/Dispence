@@ -77,7 +77,9 @@ export class SettingsPage implements OnInit, OnDestroy {
 
   async onNotificationsToggle(event: CustomEvent): Promise<void> {
     const enabled = event.detail.checked;
-    if (enabled && this.notificationService.isSupported) {
+    if (enabled && this.notificationService.needsHomeScreenInstall) {
+      this.showToast('Su iPhone le notifiche funzionano solo dopo "Aggiungi a schermata Home" da Safari');
+    } else if (enabled && (this.notificationService.isSupported || this.notificationService.isWebSupported)) {
       const granted = await this.notificationService.ensurePermission();
       if (!granted) {
         this.notificationsEnabled = false;

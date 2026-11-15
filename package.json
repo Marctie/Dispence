@@ -10,7 +10,8 @@
     "build:prod": "ng build --configuration production",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "build:pages": "ng build --configuration production --base-href /Dispence/"
   },
   "private": true,
   "dependencies": {

@@ -49,6 +49,13 @@ export class AppComponent implements OnInit {
 
     if (Capacitor.isNativePlatform()) {
       await SplashScreen.hide();
+    } else {
+      // PWA: ricontrolla le scadenze ogni volta che l'app torna in primo piano
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.notificationService.checkWeb();
+        }
+      });
     }
   }
 

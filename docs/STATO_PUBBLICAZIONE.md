@@ -43,6 +43,11 @@ App Ionic/Angular + Capacitor per la gestione della dispensa domestica. Ribattez
 ## Da fare — funzionalità core (non bloccante per submit)
 - [ ] Test interattivo manuale di scanner barcode e notifiche su device reale (il test via emulatore con permessi camera reali non è stato possibile in questa sessione)
 
+## Versione web / iPhone (2026-11-15)
+- [x] PWA installabile su iPhone, notifiche riepilogative + badge, workflow GitHub Pages
+- [ ] Attivare GitHub Pages: il repo `Marctie/Dispence` è **privato** → Pages gratis richiede repo pubblico (o piano GitHub Pro). Poi Settings → Pages → Source: GitHub Actions
+- [ ] Opzionale: notifiche push vere ad app chiusa (richiede un piccolo backend, es. Cloudflare Worker + Web Push)
+
 ## Backlog (richieste future, non prioritarie ora)
 _(vuoto per ora)_
 

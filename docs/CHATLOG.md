@@ -39,3 +39,14 @@
 - L'utente ha completato autonomamente la pubblicazione su Google Play Console (Store Listing, App content/Data Safety, categoria, upload del bundle `.aab`, nome release e note di rilascio) usando i testi e gli asset preparati nella sessione precedente. **App inviata per la revisione di Google.**
 - Fornito su richiesta il percorso locale del file `.aab` firmato (`android/app/build/outputs/bundle/release/app-release.aab`) e reinviato il file.
 - Aggiornato questo changelog a chiusura del ciclo di pubblicazione.
+
+## Sessione 2026-11-15 — Versione web (PWA) per iPhone su GitHub Pages
+
+- Obiettivo: far usare l'app su iPhone senza App Store. Su iOS non è possibile installare app native fuori dall'App Store (serve account Apple Developer 99 €/anno; il Play Store non c'entra con iPhone), quindi si usa la **PWA** "Aggiungi a schermata Home" da Safari.
+- Resa la web app installabile: icone PNG (`apple-touch-icon` 180, 192, 512; iOS non accetta SVG), `<link rel="apple-touch-icon">` corretto (prima era un `<meta>` ignorato), manifest con `start_url`/`scope` relativi per funzionare sotto `/Dispence/`.
+- Il service worker `sw.js` esisteva ma non veniva mai registrato: ora registrato in `main.ts` solo su web https (mai nell'app Android), limitato alla stessa origine, con gestione del tap sulla notifica.
+- Notifiche web in `NotificationService`: su web non si possono pianificare notifiche future senza un server push, quindi all'apertura/ritorno in primo piano dell'app viene mostrata al massimo una notifica riepilogativa al giorno + badge numerico sull'icona (iOS 16.4+, solo app installata in Home). Il ramo Android (notifiche locali pianificate) è invariato.
+- Impostazioni: se su iPhone l'app non è installata in Home, un toast spiega come fare; FAQ aggiornata.
+- Aggiunto workflow `.github/workflows/pages.yml` (build con base href `/<repo>/`, `404.html` per i deep link, `.nojekyll`) e script `npm run build:pages`.
+- Verifiche: build produzione ok, 11/11 test verdi, app servita localmente sotto `/Dispence/` e avviata in browser headless anche su deep link `/tabs/home`. Build Android (`build:prod`, base `/`) invariata.
+- Limiti noti web: scanner barcode non disponibile (Safari non supporta né ML Kit né BarcodeDetector) → inserimento manuale; dati salvati nel browser del telefono (usare il backup/esporta).
