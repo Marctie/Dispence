@@ -1,21 +1,35 @@
 import { Injectable } from '@angular/core';
 import { Capacitor } from '@capacitor/core';
-import { LocalNotifications } from '@capacitor/local-notifications';
+import { LocalNotifications, LocalNotificationSchema } from '@capacitor/local-notifications';
+import { environment } from '../../environments/environment';
 import { Product } from '../models/product.model';
+import { UserPreferences } from '../models/user-preferences.model';
+import {
+  dayNumber, hash, localDayKey, notificationsForDay, parseTime, planNotifications,
+} from '../notifications/planner';
+import { AuthService } from './auth.service';
 
 const WEB_LAST_NOTIFIED_KEY = 'dispensa_web_last_expiry_notification';
+const PUSH_ENDPOINT_KEY = 'dispensa_push_endpoint';
+/** Giorni di notifiche pianificate in anticipo su Android (si ripianifica a ogni apertura/modifica). */
+const HORIZON_DAYS = 30;
+const MAX_SCHEDULED = 60;
+
+export const CHANNEL_EXPIRY = 'expiry-alerts';
+export const CHANNEL_PANTRY = 'pantry-updates';
 
 /**
- * Notifiche di scadenza.
- * - Nativo (Android): notifiche locali pianificate, arrivano anche ad app chiusa.
- * - Web/PWA (es. iPhone da schermata Home): il browser non permette di pianificare
- *   notifiche future senza un server push. Quando l'app viene aperta o torna in primo piano
- *   si mostra al massimo una notifica riepilogativa al giorno e si aggiorna il badge
- *   sull'icona con il numero di prodotti scaduti/in scadenza.
+ * Notifiche.
+ * - Android: notifiche locali pianificate (scadenze, scorte basse) che arrivano anche ad app chiusa,
+ *   più l'avviso dei prodotti aggiunti da altri membri quando l'app è in secondo piano.
+ * - Web/iPhone: notifiche push inviate dal server (Supabase) anche ad app chiusa, se l'utente ha un
+ *   account e l'app è installata nella schermata Home. Senza push si mostra un riepilogo all'apertura.
  */
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private lastArgs: { products: Product[]; alertDays: number; enabled: boolean } | null = null;
+  private lastArgs: { products: Product[]; prefs: UserPreferences } | null = null;
+
+  constructor(private auth: AuthService) {}
 
   /** Notifiche native pianificabili (Android). */
   get isSupported(): boolean {
@@ -28,6 +42,16 @@ export class NotificationService {
       && typeof window !== 'undefined'
       && 'Notification' in window
       && 'serviceWorker' in navigator;
+  }
+
+  /** Notifiche push dal server (app chiusa) disponibili su questo browser. */
+  get isPushSupported(): boolean {
+    return this.isWebSupported && 'PushManager' in window
+      && !!environment.vapidPublicKey && this.auth.enabled && !!this.auth.user;
+  }
+
+  get isPushActive(): boolean {
+    try { return !!localStorage.getItem(PUSH_ENDPOINT_KEY); } catch { return false; }
   }
 
   /** True su iPhone/iPad in Safari ma non ancora aggiunta alla schermata Home. */
@@ -55,57 +79,88 @@ export class NotificationService {
     return false;
   }
 
-  /** Ripianifica tutte le notifiche di scadenza a partire dallo stato attuale della dispensa. */
-  async rescheduleAll(products: Product[], alertDays: number, enabled: boolean): Promise<void> {
-    this.lastArgs = { products, alertDays, enabled };
+  /** Ripianifica tutte le notifiche a partire dallo stato attuale della dispensa e delle preferenze. */
+  async rescheduleAll(products: Product[], prefs: UserPreferences): Promise<void> {
+    this.lastArgs = { products, prefs };
     if (!this.isSupported) {
       await this.checkWeb();
       return;
     }
 
-    await LocalNotifications.cancel({ notifications: await this.pendingIds() });
-    if (!enabled) return;
+    const pending = await LocalNotifications.getPending();
+    const expiryIds = pending.notifications
+      .filter(n => (n as LocalNotificationSchema).channelId !== CHANNEL_PANTRY)
+      .map(n => ({ id: n.id }));
+    if (expiryIds.length) await LocalNotifications.cancel({ notifications: expiryIds });
+    if (!prefs.notificationsEnabled) return;
 
-    const granted = await this.ensurePermission();
-    if (!granted) return;
+    const { display } = await LocalNotifications.checkPermissions();
+    if (display !== 'granted') return;
 
-    const notifications = products
-      .filter(p => p.expiryDate)
-      .map(p => this.buildNotification(p, alertDays))
-      .filter((n): n is NonNullable<typeof n> => n !== null);
+    const now = new Date();
+    const { hour, minute } = parseTime(prefs.notifyTime);
+    const todayAt = new Date(now);
+    todayAt.setHours(hour, minute, 0, 0);
 
-    if (notifications.length > 0) {
-      await LocalNotifications.schedule({ notifications });
-    }
+    const planned = planNotifications(products, prefs, localDayKey(now), HORIZON_DAYS, todayAt <= now)
+      .slice(0, MAX_SCHEDULED);
+
+    const notifications: LocalNotificationSchema[] = planned.map(n => {
+      const [y, m, d] = n.day.split('-').map(Number);
+      return {
+        id: n.id,
+        title: n.title,
+        body: n.body,
+        largeBody: n.body,
+        schedule: { at: new Date(y, m - 1, d, hour, minute), allowWhileIdle: true },
+        channelId: CHANNEL_EXPIRY,
+      };
+    });
+    if (notifications.length) await LocalNotifications.schedule({ notifications });
   }
 
-  /** Web: da richiamare quando l'app torna in primo piano. */
+  /** Android: prodotti aggiunti da un altro membro mentre l'app è in secondo piano. */
+  async showAdditions(by: string, names: string[], prefs: UserPreferences): Promise<void> {
+    if (!this.isSupported || !prefs.notificationsEnabled || !prefs.notifyAdditions) return;
+    if (document.visibilityState === 'visible') return;
+    const list = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} e altri ${names.length - 4}`;
+    await LocalNotifications.schedule({
+      notifications: [{
+        id: hash('add|' + Date.now()),
+        title: `${by} ha aggiunto alla dispensa`,
+        body: list,
+        channelId: CHANNEL_PANTRY,
+      }],
+    });
+  }
+
+  /** Web: riepilogo all'apertura (se non ci sono le push) e numero sull'icona dell'app. */
   async checkWeb(): Promise<void> {
     if (this.isSupported || !this.lastArgs) return;
-    const { products, alertDays, enabled } = this.lastArgs;
-    const due = enabled ? this.dueProducts(products, alertDays) : [];
+    const { products, prefs } = this.lastArgs;
+    const today = localDayKey(new Date());
 
+    const due = prefs.notificationsEnabled
+      ? products.filter(p => p.expiryDate && dayNumber(p.expiryDate) - dayNumber(today) <= prefs.expiryAlertDays)
+      : [];
     await this.setBadge(due.length);
 
-    if (!enabled || due.length === 0 || !this.isWebSupported) return;
-    if (Notification.permission !== 'granted') return;
+    if (!prefs.notificationsEnabled || !this.isWebSupported || Notification.permission !== 'granted') return;
+    if (this.isPushActive) return;           // ci pensa il server, anche ad app chiusa
 
-    const today = new Date().toISOString().slice(0, 10);
+    const { hour, minute } = parseTime(prefs.notifyTime);
+    const now = new Date();
+    if (now.getHours() * 60 + now.getMinutes() < hour * 60 + minute) return;
     try {
       if (localStorage.getItem(WEB_LAST_NOTIFIED_KEY) === today) return;
     } catch { /* storage non disponibile */ }
 
-    const expired = due.filter(d => d.days < 0).length;
-    const names = due.slice(0, 3).map(d => d.product.name).join(', ');
-    const more = due.length > 3 ? ` e altri ${due.length - 3}` : '';
-    const title = expired > 0
-      ? `${due.length} prodott${due.length === 1 ? 'o' : 'i'} scadut${due.length === 1 ? 'o' : 'i'} o in scadenza`
-      : `${due.length} prodott${due.length === 1 ? 'o' : 'i'} in scadenza`;
-
+    const [n] = notificationsForDay(products, { ...prefs, notifySummary: true }, today, true);
+    if (!n) return;
     try {
       const reg = await navigator.serviceWorker.ready;
-      await reg.showNotification(title, {
-        body: `${names}${more}`,
+      await reg.showNotification(n.title, {
+        body: n.body,
         icon: 'assets/icon/icon-192.png',
         badge: 'assets/icon/icon-192.png',
         tag: 'expiry-summary',
@@ -116,18 +171,78 @@ export class NotificationService {
     }
   }
 
-  private dueProducts(products: Product[], alertDays: number): { product: Product; days: number }[] {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    return products
-      .filter(p => p.expiryDate)
-      .map(p => {
-        const d = new Date(p.expiryDate!);
-        d.setHours(0, 0, 0, 0);
-        return { product: p, days: Math.round((d.getTime() - today.getTime()) / 86400000) };
-      })
-      .filter(x => x.days <= alertDays)
-      .sort((a, b) => a.days - b.days);
+  // ── Push dal server (web) ─────────────────────────────────────────────────
+
+  /** Iscrive questo browser alle notifiche push dell'account. */
+  async enablePush(): Promise<boolean> {
+    if (!this.isPushSupported || Notification.permission !== 'granted') return false;
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: this.base64UrlToBytes(environment.vapidPublicKey),
+        });
+      }
+      const json = sub.toJSON();
+      // Lo stesso browser potrebbe essere stato usato da un altro account: si ripulisce prima.
+      await this.auth.supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+      const { error } = await this.auth.supabase.from('push_subscriptions').insert({
+        endpoint: sub.endpoint,
+        p256dh: json.keys?.['p256dh'],
+        auth: json.keys?.['auth'],
+      });
+      if (error) throw error;
+      localStorage.setItem(PUSH_ENDPOINT_KEY, sub.endpoint);
+      return true;
+    } catch (e) {
+      console.error('Iscrizione alle notifiche push non riuscita', e);
+      return false;
+    }
+  }
+
+  async disablePush(): Promise<void> {
+    if (!this.isWebSupported) return;
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      const sub = await reg?.pushManager.getSubscription();
+      if (sub) {
+        if (this.auth.user) {
+          await this.auth.supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+        }
+        await sub.unsubscribe();
+      }
+    } catch (e) {
+      console.error('Disattivazione push non riuscita', e);
+    } finally {
+      try { localStorage.removeItem(PUSH_ENDPOINT_KEY); } catch { /* ignore */ }
+    }
+  }
+
+  /** Notifica di prova: su web passa dal server (verifica tutta la catena), su Android è locale. */
+  async sendTest(): Promise<string> {
+    if (this.isSupported) {
+      if (!(await this.ensurePermission())) return 'Permesso notifiche negato';
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: hash('test|' + Date.now()), title: 'Dispensina Digitale',
+          body: 'Le notifiche funzionano 👍', channelId: CHANNEL_EXPIRY,
+          schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true },
+        }],
+      });
+      return 'Notifica di prova tra qualche secondo';
+    }
+    if (this.isPushActive && this.auth.user) {
+      const { error } = await this.auth.supabase.functions.invoke('push-test', { body: {} });
+      return error ? 'Invio non riuscito, riprova più tardi' : 'Notifica di prova inviata';
+    }
+    if (this.isWebSupported && Notification.permission === 'granted') {
+      const reg = await navigator.serviceWorker.ready;
+      await reg.showNotification('Dispensina Digitale', { body: 'Le notifiche funzionano 👍', icon: 'assets/icon/icon-192.png' });
+      return 'Notifica di prova mostrata';
+    }
+    return 'Attiva prima le notifiche';
   }
 
   private async setBadge(count: number): Promise<void> {
@@ -138,31 +253,11 @@ export class NotificationService {
     } catch { /* badge non supportato */ }
   }
 
-  private buildNotification(product: Product, alertDays: number) {
-    const expiry = new Date(product.expiryDate!);
-    expiry.setHours(9, 0, 0, 0);
-    const fireDate = new Date(expiry.getTime() - alertDays * 86400000);
-    if (fireDate.getTime() <= Date.now()) return null;
-
-    return {
-      id: this.idFor(product.id),
-      title: 'Prodotto in scadenza',
-      body: `${product.name} scade il ${expiry.toLocaleDateString('it-IT')}`,
-      schedule: { at: fireDate },
-      channelId: 'expiry-alerts',
-    };
-  }
-
-  private idFor(productId: string): number {
-    let hash = 0;
-    for (let i = 0; i < productId.length; i++) {
-      hash = (hash * 31 + productId.charCodeAt(i)) >>> 0;
-    }
-    return hash % 2147483647;
-  }
-
-  private async pendingIds(): Promise<{ id: number }[]> {
-    const { notifications } = await LocalNotifications.getPending();
-    return notifications.map(n => ({ id: n.id }));
+  private base64UrlToBytes(value: string): Uint8Array<ArrayBuffer> {
+    const padded = (value + '='.repeat((4 - (value.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(padded);
+    const out = new Uint8Array(new ArrayBuffer(raw.length));
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
   }
 }

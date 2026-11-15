@@ -162,3 +162,20 @@ ion-item {
 .expiry-bucket--warning { .expiry-bucket-count { color: var(--color-warning); } }
 .expiry-bucket--primary { .expiry-bucket-count { color: var(--color-primary); } }
 .expiry-bucket--success { .expiry-bucket-count { color: var(--ion-color-success); } }
+
+// ── Notifiche e condivisione ──────────────────────────────────────────────────
+
+.time-input {
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-surface-input);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 4px 8px;
+}
+
+.invite-code {
+  font-family: var(--font-display);
+  font-size: 1.25rem !important;
+  letter-spacing: 0.12em;
+}

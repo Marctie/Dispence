@@ -11,10 +11,7 @@ const LOCAL_DATA_PREFIX = 'dispensa_';
 /** Chiavi locali da conservare anche dopo il logout (non sono dati personali della dispensa). */
 const KEEP_ON_LOGOUT = new Set(['dispensa_theme']);
 
-/**
- * Account utente (Supabase Auth) per la versione web.
- * Nell'app Android nativa resta disattivato: i dati restano solo sul dispositivo come sempre.
- */
+/** Account utente (Supabase Auth), su web e Android. Disattivato se la configurazione è vuota. */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private client: SupabaseClient | null = null;
@@ -26,13 +23,16 @@ export class AuthService {
   linkError: string | null = null;
 
   get enabled(): boolean {
-    return !Capacitor.isNativePlatform()
-      && !!environment.supabase.url
-      && !!environment.supabase.publishableKey;
+    return !!environment.supabase.url && !!environment.supabase.publishableKey;
   }
 
   get user(): User | null {
     return this.user$.value;
+  }
+
+  /** Nome mostrato agli altri membri della dispensa: la parte dell'email prima della @. */
+  get displayName(): string {
+    return (this.user?.email ?? '').split('@')[0].slice(0, 60);
   }
 
   get supabase(): SupabaseClient {
@@ -125,7 +125,8 @@ export class AuthService {
   }
 
   private siteUrl(): string {
-    return new URL('./', document.baseURI).href;
+    // Nell'app Android l'indirizzo interno è https://localhost: i link email devono aprire la web app.
+    return Capacitor.isNativePlatform() ? environment.webUrl : new URL('./', document.baseURI).href;
   }
 
   /** Gestisce i link ricevuti via email (conferma registrazione / reimposta password). */

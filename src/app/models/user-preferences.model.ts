@@ -1,15 +1,14 @@
-export interface UserPreferences {
+import { DEFAULT_NOTIFICATION_PREFS, NotificationPrefs } from '../notifications/planner';
+
+export interface UserPreferences extends NotificationPrefs {
   theme: 'light' | 'dark' | 'system';
   dietaryRestrictions: string[];
   customLocations: string[];
-  notificationsEnabled: boolean;
-  expiryAlertDays: number;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   theme: 'system',
   dietaryRestrictions: [],
   customLocations: [],
-  notificationsEnabled: true,
-  expiryAlertDays: 7,
+  ...DEFAULT_NOTIFICATION_PREFS,
 };

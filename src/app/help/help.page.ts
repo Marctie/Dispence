@@ -23,8 +23,8 @@ export class HelpPage {
       answer: 'Tocca "Scansiona codice a barre" quando aggiungi un nuovo prodotto e inquadra il codice con la fotocamera. Se il prodotto è già stato scansionato o inserito in passato, i dati vengono precompilati dalla cache locale. Se è la prima volta e sei online, l\'app prova a recuperare nome e informazioni da Open Food Facts; se non trova nulla o sei offline, puoi comunque compilare i campi a mano.',
     },
     {
-      question: 'Come ricevo le notifiche di scadenza?',
-      answer: 'Dalle Impostazioni puoi attivare le notifiche e scegliere con quanti giorni di anticipo vuoi essere avvisato. Le notifiche sono generate localmente sul dispositivo, non richiedono connessione e non passano da server esterni. Su iPhone (versione web) aggiungi prima l’app alla schermata Home da Safari: riceverai un riepilogo dei prodotti in scadenza all’apertura dell’app e il numero comparirà sull’icona.',
+      question: 'Come funzionano le notifiche?',
+      answer: 'Dalle Impostazioni → Notifiche scegli l’orario e cosa ricevere: prodotti in scadenza (con quanti giorni di anticipo), il giorno stesso della scadenza, i prodotti scaduti, le scorte basse e, se condividi la dispensa, i prodotti aggiunti dagli altri. Puoi ricevere un unico riepilogo al giorno oppure una notifica per ogni prodotto, e inviarti una notifica di prova. Su iPhone aggiungi prima l’app alla schermata Home da Safari (Condividi → “Aggiungi alla schermata Home”): così le notifiche arrivano anche ad app chiusa.',
     },
     {
       question: 'Posso creare categorie personalizzate?',
@@ -37,6 +37,10 @@ export class HelpPage {
     {
       question: 'Cosa sono i dati di esempio?',
       answer: 'Se l\'app è vuota al primo avvio, viene precaricata con alcuni prodotti di esempio (contrassegnati con l\'etichetta "Esempio") per farti vedere come funziona. Puoi rimuoverli in ogni momento da Impostazioni: verrà creato automaticamente un backup di sicurezza prima della rimozione.',
+    },
+    {
+      question: 'Come condivido la dispensa con altre persone?',
+      answer: 'In Impostazioni → Dispensa condivisa trovi il tuo codice invito: toccalo per copiarlo oppure usa “Invita qualcuno”. Chi lo riceve, dopo aver creato il suo account, va in Impostazioni → “Entra con un codice”. Da quel momento vedete e modificate la stessa dispensa e le modifiche arrivano a tutti in tempo reale. Chi ha creato la dispensa può togliere un membro o generare un nuovo codice; chiunque può uscire e tenersi una copia dei prodotti.',
     },
     {
       question: 'Come funziona la lista della spesa automatica?',

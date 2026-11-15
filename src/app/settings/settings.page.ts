@@ -1,6 +1,9 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
+import { Capacitor } from '@capacitor/core';
+import { Share } from '@capacitor/share';
+import { environment } from '../../environments/environment';
 import { ThemeService } from '../services/theme.service';
 import { PreferencesService } from '../services/preferences.service';
 import { StatsService, CategoryStat, LocationStat, ExpiryBucket } from '../services/stats.service';
@@ -8,7 +11,11 @@ import { BackupService } from '../services/backup.service';
 import { DemoDataService } from '../services/demo-data.service';
 import { NotificationService } from '../services/notification.service';
 import { AuthService } from '../services/auth.service';
-import { SyncService, SyncStatus } from '../services/sync.service';
+import { PantryInfo, PantryMember, SyncService, SyncStatus } from '../services/sync.service';
+import { DEFAULT_PREFERENCES, UserPreferences } from '../models/user-preferences.model';
+
+type NotificationToggle = 'notifySummary' | 'notifyExpiry' | 'notifySameDay' | 'notifyExpired'
+  | 'notifyLowStock' | 'notifyAdditions';
 
 @Component({
   selector: 'app-settings',
@@ -20,12 +27,15 @@ export class SettingsPage implements OnInit, OnDestroy {
   @ViewChild('backupFileInput') backupFileInput!: ElementRef<HTMLInputElement>;
 
   currentTheme: 'light' | 'dark' | 'system' = 'system';
+  prefs: UserPreferences = DEFAULT_PREFERENCES;
   alertDays = 7;
   notificationsEnabled = true;
   autoBackupDate: string | null = null;
   hasDemoData = false;
   accountEmail: string | null = null;
   syncStatus: SyncStatus = 'idle';
+  pantry: PantryInfo | null = null;
+  members: PantryMember[] = [];
 
   // stats
   totalProducts = 0;
@@ -38,8 +48,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   byLocation: LocationStat[] = [];
   expiryBuckets: ExpiryBucket[] = [];
 
-  private sub!: Subscription;
-  private syncSub?: Subscription;
+  private subs: Subscription[] = [];
 
   constructor(
     private themeService: ThemeService,
@@ -55,10 +64,22 @@ export class SettingsPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.sub = this.themeService.currentTheme$.subscribe(t => (this.currentTheme = t));
-    const prefs = this.preferencesService.get();
-    this.alertDays = prefs.expiryAlertDays;
-    this.notificationsEnabled = prefs.notificationsEnabled;
+    this.subs.push(
+      this.themeService.currentTheme$.subscribe(t => (this.currentTheme = t)),
+      this.preferencesService.get$().subscribe(p => {
+        this.prefs = p;
+        this.alertDays = p.expiryAlertDays;
+        this.notificationsEnabled = p.notificationsEnabled;
+      }),
+    );
+    if (this.authService.enabled) {
+      this.subs.push(
+        this.authService.user$.subscribe(u => (this.accountEmail = u?.email ?? null)),
+        this.syncService.status$.subscribe(s => (this.syncStatus = s)),
+        this.syncService.pantry$.subscribe(p => (this.pantry = p)),
+        this.syncService.members$.subscribe(m => (this.members = m)),
+      );
+    }
     this.loadStats();
     this.loadBackupState();
   }
@@ -66,15 +87,11 @@ export class SettingsPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.loadStats();
     this.loadBackupState();
-    if (this.authService.enabled) {
-      this.accountEmail = this.authService.user?.email ?? null;
-      this.syncSub = this.syncService.status$.subscribe(s => (this.syncStatus = s));
-    }
+    if (this.accountEmail) this.syncService.loadMembers();
   }
 
   ngOnDestroy(): void {
-    this.sub?.unsubscribe();
-    this.syncSub?.unsubscribe();
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   get syncLabel(): string {
@@ -87,6 +104,20 @@ export class SettingsPage implements OnInit, OnDestroy {
     }
   }
 
+  get isShared(): boolean { return this.members.length > 1; }
+  get isOwner(): boolean { return this.pantry?.role === 'owner'; }
+  get isNative(): boolean { return Capacitor.isNativePlatform(); }
+  get pushActive(): boolean { return this.notificationService.isPushActive; }
+  get needsHomeScreen(): boolean { return this.notificationService.needsHomeScreenInstall; }
+
+  /** Codice invito leggibile: ABCD-1234. */
+  get formattedCode(): string {
+    const c = this.pantry?.inviteCode ?? '';
+    return c.length === 8 ? `${c.slice(0, 4)}-${c.slice(4)}` : c;
+  }
+
+  // ── Account ────────────────────────────────────────────────────────────────
+
   async logout(): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: 'Uscire dall’account?',
@@ -97,7 +128,8 @@ export class SettingsPage implements OnInit, OnDestroy {
           text: 'Esci',
           role: 'destructive',
           handler: async () => {
-            await this.syncService.push();
+            await this.syncService.sync();
+            await this.notificationService.disablePush();
             await this.authService.signOut();
           },
         },
@@ -109,7 +141,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   async deleteAccount(): Promise<void> {
     const alert = await this.alertCtrl.create({
       header: 'Eliminare l’account?',
-      message: 'Account e dispensa online verranno cancellati definitivamente. L’operazione non si può annullare: esporta prima un backup se vuoi conservare i dati.',
+      message: 'L’account verrà cancellato definitivamente. Se la dispensa è condivisa resterà agli altri membri, altrimenti verrà eliminata. Esporta prima un backup se vuoi conservare i dati.',
       buttons: [
         { text: 'Annulla', role: 'cancel' },
         {
@@ -117,6 +149,7 @@ export class SettingsPage implements OnInit, OnDestroy {
           role: 'destructive',
           handler: async () => {
             try {
+              await this.notificationService.disablePush();
               await this.authService.deleteAccount();
             } catch (e) {
               this.showToast(e instanceof Error ? e.message : 'Eliminazione non riuscita');
@@ -128,6 +161,120 @@ export class SettingsPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  // ── Dispensa condivisa ─────────────────────────────────────────────────────
+
+  async shareInvite(): Promise<void> {
+    if (!this.pantry) return;
+    const code = this.formattedCode;
+    const link = `${environment.webUrl}?invito=${this.pantry.inviteCode}`;
+    const text = `Entra nella mia dispensa su Dispensina Digitale!\n`
+      + `Apri l’app → Impostazioni → Dispensa condivisa → “Entra con un codice” e inserisci: ${code}\n`
+      + `Oppure apri questo link: ${link}`;
+    try {
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({ title: 'Invito alla dispensa', text });
+      } else if (navigator.share) {
+        await navigator.share({ title: 'Invito alla dispensa', text });
+      } else {
+        await navigator.clipboard.writeText(text);
+        this.showToast('Invito copiato: incollalo in un messaggio');
+      }
+    } catch { /* condivisione annullata */ }
+  }
+
+  async copyCode(): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(this.pantry?.inviteCode ?? '');
+      this.showToast('Codice copiato');
+    } catch {
+      this.showToast('Codice: ' + this.formattedCode);
+    }
+  }
+
+  async newInviteCode(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Generare un nuovo codice?',
+      message: 'Il codice attuale smetterà di funzionare. Chi è già nella dispensa resta dentro.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Nuovo codice',
+          handler: () => {
+            this.syncService.regenerateInviteCode()
+              .then(() => this.showToast('Nuovo codice generato'))
+              .catch(e => this.showToast(e.message));
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async joinWithCode(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Entra in una dispensa',
+      message: 'Inserisci il codice che ti hanno inviato. I prodotti che hai già verranno aggiunti alla dispensa condivisa.',
+      inputs: [{ name: 'code', type: 'text', placeholder: 'ABCD-1234', attributes: { autocapitalize: 'characters', maxlength: 12 } }],
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Entra',
+          handler: (values: { code: string }) => {
+            const code = (values.code ?? '').trim();
+            if (!code) return false;
+            this.syncService.joinPantry(code)
+              .then(() => this.showToast('Ora fai parte della dispensa condivisa'))
+              .catch(e => this.showToast(e.message));
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async leaveShared(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Uscire dalla dispensa condivisa?',
+      message: 'Avrai di nuovo una dispensa tutta tua, con una copia dei prodotti attuali. Gli altri non vedranno più le tue modifiche.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Esci',
+          role: 'destructive',
+          handler: () => {
+            this.syncService.leavePantry()
+              .then(() => this.showToast('Sei uscito dalla dispensa condivisa'))
+              .catch(e => this.showToast(e.message));
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async removeMember(member: PantryMember): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: `Togliere ${member.displayName}?`,
+      message: 'Non potrà più vedere né modificare questa dispensa.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Togli',
+          role: 'destructive',
+          handler: () => {
+            this.syncService.removeMember(member.userId)
+              .then(() => this.showToast(`${member.displayName} non fa più parte della dispensa`))
+              .catch(e => this.showToast(e.message));
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  // ── Notifiche ──────────────────────────────────────────────────────────────
+
   onThemeChange(event: CustomEvent): void {
     this.themeService.setTheme(event.detail.value);
     this.preferencesService.update({ theme: event.detail.value });
@@ -136,6 +283,15 @@ export class SettingsPage implements OnInit, OnDestroy {
   onAlertDaysChange(event: CustomEvent): void {
     this.alertDays = event.detail.value;
     this.preferencesService.update({ expiryAlertDays: this.alertDays });
+  }
+
+  onToggle(key: NotificationToggle, event: CustomEvent): void {
+    this.preferencesService.update({ [key]: !!event.detail.checked });
+  }
+
+  onTimeChange(event: Event): void {
+    const value = (event.target as HTMLInputElement).value;
+    if (/^\d{2}:\d{2}$/.test(value)) this.preferencesService.update({ notifyTime: value });
   }
 
   async onNotificationsToggle(event: CustomEvent): Promise<void> {
@@ -149,9 +305,18 @@ export class SettingsPage implements OnInit, OnDestroy {
         this.showToast('Permesso notifiche negato: attivalo dalle impostazioni del sistema');
         return;
       }
+      if (this.notificationService.isPushSupported) {
+        const ok = await this.notificationService.enablePush();
+        if (!ok) this.showToast('Notifiche attive solo con l’app aperta: iscrizione al server non riuscita');
+      }
     }
+    if (!enabled) await this.notificationService.disablePush();
     this.notificationsEnabled = enabled;
     this.preferencesService.update({ notificationsEnabled: enabled });
+  }
+
+  async testNotification(): Promise<void> {
+    this.showToast(await this.notificationService.sendTest());
   }
 
   async exportBackup(): Promise<void> {

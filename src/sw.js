@@ -1,4 +1,4 @@
-const CACHE = 'dispensa-v2';
+const CACHE = 'dispensa-v3';
 
 self.addEventListener('install', () => self.skipWaiting());
 
@@ -25,6 +25,18 @@ self.addEventListener('fetch', e => {
       })
       .catch(() => caches.match(e.request).then(r => r || caches.match(new URL('./index.html', self.registration.scope))))
   );
+});
+
+// Notifiche push dal server (scadenze, prodotti aggiunti da altri, prova).
+self.addEventListener('push', e => {
+  let data = {};
+  try { data = e.data ? e.data.json() : {}; } catch { data = { body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(data.title || 'Dispensina Digitale', {
+    body: data.body || '',
+    icon: 'assets/icon/icon-192.png',
+    badge: 'assets/icon/icon-192.png',
+    tag: data.tag,
+  }));
 });
 
 self.addEventListener('notificationclick', e => {
