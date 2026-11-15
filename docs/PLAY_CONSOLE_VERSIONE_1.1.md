@@ -26,10 +26,11 @@ Il testo aggiornato (IT/EN) è in `privacy-policy/it/index.html` e `privacy-poli
 | Attività nelle app | **Altri contenuti generati dagli utenti** (prodotti, lista della spesa, categorie) | Obbligatorio | Funzionalità dell'app |
 | Informazioni e prestazioni delle app | **Log degli arresti anomali** | Obbligatorio | Analisi |
 | Informazioni e prestazioni delle app | **Diagnostica** | Obbligatorio | Analisi |
+| ID dispositivo o altri ID | **ID dispositivo o altri ID** (identificativo casuale dell'installazione usato dalla telemetria, `telemetry_device`) | Obbligatorio | Analisi |
 
 Per ogni tipo: *Trattati in modo temporaneo?* **No**.
 
-Non raccolti: posizione, contatti, foto/video (la fotocamera elabora il codice a barre solo sul dispositivo), file, calendario, dati finanziari, salute, messaggi, ID dispositivo/pubblicità (le iscrizioni push riguardano solo la web app, non l'app Android).
+Non raccolti: posizione, contatti, foto/video (la fotocamera elabora il codice a barre solo sul dispositivo), file, calendario, dati finanziari, salute, messaggi, ID pubblicitario (le iscrizioni push riguardano solo la web app, non l'app Android).
 
 ## 3. Contenuti dell'app → Accesso all'app
 
