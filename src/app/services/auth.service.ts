@@ -65,8 +65,22 @@ export class AuthService {
     await this.consumeEmailLink();
 
     const { data } = await this.client.auth.getSession();
-    this.telemetry.setSession(data.session?.user ?? null, data.session?.access_token ?? null);
-    this.user$.next(data.session?.user ?? null);
+    let session = data.session;
+
+    // Sessione salvata ma account eliminato (es. da un altro dispositivo) o revocato: si esce in modo pulito.
+    // Solo se il server risponde davvero "utente inesistente/non autorizzato": offline non si fa nulla.
+    if (session && navigator.onLine) {
+      const { error } = await this.client.auth.getUser();
+      if (error && (error.status === 401 || error.status === 403 || error.code === 'user_not_found')) {
+        // I dati locali restano: se rientra lo stesso utente si uniscono, se entra un altro account
+        // SyncService li separa (chiave owner) e non finiscono nel nuovo account.
+        await this.client.auth.signOut({ scope: 'local' }).catch(() => undefined);
+        session = null;
+      }
+    }
+
+    this.telemetry.setSession(session?.user ?? null, session?.access_token ?? null);
+    this.user$.next(session?.user ?? null);
     return this.user;
   }
 

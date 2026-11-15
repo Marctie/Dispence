@@ -69,6 +69,8 @@ export class TelemetryService {
 
   private queue: QueuedEvent[] = [];
   private session: SessionInfo | null = null;
+  /** True quando la pagina si sta chiudendo o ricaricando. */
+  private unloading = false;
   private installed = false;
   private sendTimer: any = null;
   private retryTimer: any = null;
@@ -99,6 +101,11 @@ export class TelemetryService {
     if (this.installed) return;
     this.installed = true;
     try {
+      // Pagina in chiusura/ricaricamento (es. "Esci", app chiusa): le richieste in corso vengono interrotte
+      // dal browser. Non sono errori dell'app (i dati vengono reinviati alla riapertura): non vanno segnalati.
+      const markUnloading = () => { this.unloading = true; };
+      window.addEventListener('pagehide', markUnloading);
+      window.addEventListener('beforeunload', markUnloading);
       window.addEventListener('error', (ev: ErrorEvent) => {
         // Errori di caricamento risorse (img/script) arrivano senza ev.error.
         this.captureError(ev.error ?? ev.message ?? 'Errore sconosciuto', 'window');
@@ -189,6 +196,7 @@ export class TelemetryService {
     try {
       const { message, stack } = TelemetryService.describeError(err);
       if (IGNORED_ERRORS.some(re => re.test(message))) return;
+      if (this.unloading && /failed to fetch|networkerror|load failed|aborted/i.test(message)) return;
       const name = 'errore_' + source.toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 40);
       const msg = TelemetryService.scrub(message).slice(0, 300);
       const page = this.currentPage();
