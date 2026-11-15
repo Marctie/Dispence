@@ -110,6 +110,9 @@
   --ion-item-border-color: #e0ddd8;
   --ion-card-background:   #ffffff;
   --ion-border-color:      #e0ddd8;
+
+  // controlli nativi chiari anche con sistema scuro e tema "chiaro" scelto
+  color-scheme: light;
 }
 
 // ─── Dark Mode ───────────────────────────────────────────────────────────────
@@ -119,6 +122,10 @@
 // dalla preferenza di sistema.
 
 @mixin dark-palette {
+  // Verde e rosso un po' più chiari: usati come colore del testo (badge, percentuali,
+  // statistiche) sulle card scure erano poco leggibili.
+  --color-primary:          #62a86d;
+  --color-danger:           #e06666;
   --color-primary-light:    rgba(61, 124, 71, 0.18);
   --color-accent-light:     rgba(224, 123, 57, 0.18);
   --color-danger-light:     rgba(201, 64, 64, 0.18);
@@ -153,12 +160,23 @@
   --ion-tab-bar-background:    #1c1c1a;
   --ion-tab-bar-border-color:  #3a3a36;
   --ion-tab-bar-color:         #9b9b8e;
-  --ion-tab-bar-color-selected: #3d7c47;
+  --ion-tab-bar-color-selected: #62a86d;
 
   --ion-item-background:   #2a2a27;
   --ion-item-border-color: #3a3a36;
   --ion-card-background:   #2a2a27;
   --ion-border-color:      #3a3a36;
+
+  // controlli nativi (es. icona dell'input orario, barre di scorrimento) in versione scura
+  color-scheme: dark;
+
+  // La palette scura di Ionic (iOS) schiarisce sfondo e toolbar delle modali:
+  // le riallineiamo a quella dell'app (modale "Aggiungi prodotto").
+  ion-modal {
+    --ion-background-color:     #1c1c1a;
+    --ion-toolbar-background:   #1c1c1a;
+    --ion-toolbar-border-color: #3a3a36;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

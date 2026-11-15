@@ -12,6 +12,7 @@ import { DemoDataService } from './services/demo-data.service';
 import { AuthService } from './services/auth.service';
 import { SyncService } from './services/sync.service';
 import { shareText } from './shared/share.util';
+import { ThemeService } from './services/theme.service';
 
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
 /** Invito a creare il codice di recupero già mostrato (per utente). Prefisso diverso da dispensa_: sopravvive al logout. */
@@ -39,6 +40,9 @@ export class AppComponent implements OnInit {
     private syncService: SyncService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
+    // Iniettato qui perché applichi subito il tema salvato (classe .ion-palette-dark):
+    // prima veniva creato solo aprendo Impostazioni e il tema forzato non valeva all'avvio.
+    private themeService: ThemeService,
   ) {}
 
   async ngOnInit(): Promise<void> {

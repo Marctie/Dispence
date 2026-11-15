@@ -40,8 +40,9 @@
 .demo-badge {
   font-size: 0.6rem;
   font-weight: 700;
-  color: var(--ion-color-warning-shade, #b26a00);
-  background: var(--ion-color-warning-tint, #ffe0b2);
+  // token del tema: leggibile sia in chiaro sia in scuro
+  color: var(--color-warning);
+  background: var(--color-warning-light);
   padding: 1px 6px;
   border-radius: var(--radius-full);
   text-transform: uppercase;
@@ -53,7 +54,9 @@
 .card-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  min-width: 0;
 }
 
 .location-chip {
@@ -83,13 +86,18 @@
 .delete-btn {
   background: none;
   border: none;
-  padding: 4px;
+  // area di tocco 44x44; i margini negativi mantengono l'altezza della card
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px -12px -12px 0;
+  padding: 0;
   color: var(--color-text-muted);
   cursor: pointer;
   line-height: 1;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
+  justify-content: center;
 
   ion-icon { font-size: 1.1rem; }
 

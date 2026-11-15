@@ -1,7 +1,10 @@
+// inline-flex: segue l'allineamento di ion-title (centrato su iOS, a sinistra su Android)
 .header-logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  vertical-align: middle;
   gap: 8px;
+  max-width: 100%;
 
   .logo-svg { color: var(--color-primary); flex-shrink: 0; }
 
@@ -27,9 +30,10 @@
 
   ion-icon { font-size: 1.1rem; flex-shrink: 0; }
 
-  span { flex: 1; }
+  span { flex: 1; min-width: 0; }
 
-  .alert-btn { --color: inherit; font-weight: 700; margin: 0; }
+  // area di tocco 44px senza ingrandire il banner
+  .alert-btn { --color: inherit; font-weight: 700; margin: -6px -8px -6px 0; min-height: 44px; flex-shrink: 0; }
 
   &--danger  { background: var(--color-danger-light);  color: var(--color-danger); }
   &--warning { background: var(--color-warning-light); color: var(--color-warning); }
@@ -45,6 +49,8 @@
 }
 
 .stat-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
   background: var(--color-surface-card);
   border-radius: var(--radius-md);
   padding: var(--space-md) var(--space-sm);
@@ -96,6 +102,7 @@
 
 .expiring-name {
   flex: 1;
+  min-width: 0;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 0.9rem;
@@ -113,6 +120,7 @@
 }
 
 .qty-badge {
+  white-space: nowrap;
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-warning);
@@ -124,13 +132,18 @@
 .add-to-cart-btn {
   background: none;
   border: none;
-  padding: 4px;
+  // area di tocco 44x44; il margine negativo mantiene l'altezza della riga
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px -12px -10px 0;
+  padding: 0;
   cursor: pointer;
   color: var(--color-primary);
   font-size: 1.25rem;
   line-height: 1;
   display: flex;
   align-items: center;
+  justify-content: center;
 
   &--added { color: var(--color-text-muted); }
   &:disabled { opacity: 0.5; cursor: default; }

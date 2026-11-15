@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ProductService } from './product.service';
+import { CategoryService } from './category.service';
 import { Product } from '../models/product.model';
 
 export interface CategoryStat { category: string; count: number; emoji: string; }
@@ -8,7 +9,7 @@ export interface ExpiryBucket  { label: string; count: number; color: string; }
 
 @Injectable({ providedIn: 'root' })
 export class StatsService {
-  constructor(private productService: ProductService) {}
+  constructor(private productService: ProductService, private categoryService: CategoryService) {}
 
   byCategory(): CategoryStat[] {
     const map = new Map<string, { count: number; emoji: string }>();
@@ -71,12 +72,9 @@ export class StatsService {
       .filter(p => p.lowStockThreshold !== null && p.quantity <= p.lowStockThreshold).length;
   }
 
+  /** Emoji della categoria del prodotto (predefinite e personalizzate). */
   private emoji(p: Product): string {
-    const map: Record<string, string> = {
-      verdura:'🥦', frutta:'🍎', carne:'🥩', pesce:'🐟', latticini:'🧀',
-      cereali:'🌾', legumi:'🫘', condimenti:'🫙', bevande:'🥤',
-      dolci:'🍫', surgelati:'🧊', altro:'📦',
-    };
-    return map[p.category?.toLowerCase()] ?? '📦';
+    const cat = this.categoryService.getAll().find(c => c.id === p.category);
+    return cat?.emoji ?? '📦';
   }
 }

@@ -8,13 +8,13 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-accordion-group>
+  <ion-accordion-group class="faq-list">
     @for (faq of faqs; track faq.question) {
       <ion-accordion [value]="faq.question">
-        <ion-item slot="header" color="light">
-          <ion-label>{{ faq.question }}</ion-label>
+        <ion-item slot="header">
+          <ion-label class="ion-text-wrap">{{ faq.question }}</ion-label>
         </ion-item>
-        <div class="ion-padding" slot="content">
+        <div class="faq-answer" slot="content">
           {{ faq.answer }}
         </div>
       </ion-accordion>

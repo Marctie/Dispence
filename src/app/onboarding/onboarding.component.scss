@@ -5,13 +5,22 @@
   z-index: 2000;
   display: flex;
   align-items: flex-end;
+  justify-content: center;
+  padding-top: env(safe-area-inset-top);
 }
 
 .onboarding-sheet {
   width: 100%;
+  // su tablet il foglio resta centrato e leggibile, non a tutta larghezza
+  max-width: 560px;
+  // su schermi bassi (telefono in orizzontale) il contenuto scorre invece di uscire in alto
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--color-surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: var(--space-lg) var(--space-md) calc(var(--space-xl) + env(safe-area-inset-bottom));
+  padding: var(--space-lg) calc(var(--space-md) + env(safe-area-inset-right))
+           calc(var(--space-xl) + env(safe-area-inset-bottom)) calc(var(--space-md) + env(safe-area-inset-left));
   animation: slideUp 0.3s ease;
 }
 
@@ -53,6 +62,7 @@
   font-weight: 800;
   color: var(--color-text);
   margin: 0 0 var(--space-sm);
+  overflow-wrap: anywhere;
 }
 
 .step-text {

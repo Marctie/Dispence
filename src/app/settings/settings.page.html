@@ -13,7 +13,7 @@
       <ion-list inset="true">
         <ion-item>
           <ion-icon name="person-circle-outline" slot="start" color="primary"></ion-icon>
-          <ion-label>
+          <ion-label class="ion-text-wrap long-text">
             <h3>{{ accountEmail }}</h3>
             <p>{{ syncLabel }}</p>
           </ion-label>
@@ -63,12 +63,12 @@
           @for (m of members; track m.userId) {
             <ion-item>
               <ion-icon [name]="m.role === 'owner' ? 'star-outline' : 'person-outline'" slot="start" color="medium"></ion-icon>
-              <ion-label>
+              <ion-label class="ion-text-wrap long-text">
                 <h3>{{ m.displayName }}{{ m.isMe ? ' (tu)' : '' }}</h3>
                 <p>{{ m.role === 'owner' ? 'Ha creato la dispensa' : 'Membro' }}</p>
               </ion-label>
               @if (isOwner && !m.isMe) {
-                <ion-button slot="end" fill="clear" color="danger" (click)="removeMember(m)" aria-label="Togli dalla dispensa">
+                <ion-button class="icon-btn" slot="end" fill="clear" color="danger" (click)="removeMember(m)" aria-label="Togli dalla dispensa">
                   <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
                 </ion-button>
               }
@@ -106,10 +106,10 @@
       <ion-item>
         <ion-label>Tema</ion-label>
         <ion-segment
+          class="theme-segment"
           slot="end"
           [value]="currentTheme"
-          (ionChange)="onThemeChange($event)"
-          style="max-width: 140px">
+          (ionChange)="onThemeChange($event)">
           <ion-segment-button value="light">
             <ion-icon name="sunny-outline"></ion-icon>
           </ion-segment-button>
@@ -261,16 +261,17 @@
       </div>
 
       @if (wastedValue > 0) {
-        <p class="stat-bar-title" style="margin-top: 12px">
+        <p class="stat-bar-title stat-waste">
           Valore stimato sprecato: <strong>{{ wastedValue | number:'1.2-2' }} €</strong>
         </p>
       }
 
+      <div class="stat-bar-grid">
       @if (mostRepurchased.length > 0) {
         <div class="stat-bar-section">
           <p class="stat-bar-title">Prodotti più ricomprati</p>
           @for (r of mostRepurchased; track r.name) {
-            <div class="stat-bar-row">
+            <div class="stat-bar-row stat-bar-row--plain">
               <span class="stat-bar-label">{{ r.name }}</span>
               <span class="stat-bar-count">{{ r.count }}×</span>
             </div>
@@ -328,6 +329,7 @@
           }
         </div>
       }
+      </div>
     </div>
   }
 

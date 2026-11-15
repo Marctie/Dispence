@@ -9,6 +9,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  max-width: 100%;
+  min-height: 44px;
   padding: 8px 12px;
   background: var(--color-primary-light);
   border: 1.5px dashed var(--color-primary);
@@ -39,7 +41,8 @@
   margin-left: 6px;
   vertical-align: middle;
 
-  &--muted { background: var(--color-text-muted); }
+  // testo scuro sul grigio in tema scuro, chiaro in tema chiaro
+  &--muted { background: var(--color-text-muted); color: var(--color-surface); }
 }
 
 .items-list {
@@ -66,12 +69,26 @@
   }
 }
 
+// Pulsanti icona: area di tocco 44x44, margini negativi per non alzare la riga
+.check-btn,
+.delete-item-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: -10px 0;
+  padding: 0;
+}
+
 .check-btn {
+  margin-left: -10px;
+  margin-right: -6px;
   background: none;
   border: none;
-  padding: 2px;
   cursor: pointer;
-  color: var(--color-border);
+  // il bordo era quasi invisibile su card bianca: grigio leggibile in entrambi i temi
+  color: var(--color-text-placeholder);
   font-size: 1.4rem;
   line-height: 1;
   flex-shrink: 0;
@@ -83,6 +100,7 @@
 
 .item-name {
   flex: 1;
+  min-width: 0;
   font-family: var(--font-display);
   font-weight: 600;
   font-size: 0.9rem;
@@ -96,12 +114,14 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .delete-item-btn {
+  margin-right: -12px;
+  margin-left: -6px;
   background: none;
   border: none;
-  padding: 4px;
   color: var(--color-text-muted);
   cursor: pointer;
   font-size: 1.1rem;
@@ -110,5 +130,3 @@
 
   &:hover { color: var(--color-danger); }
 }
-
-ion-fab { margin-bottom: env(safe-area-inset-bottom, 0px); }
