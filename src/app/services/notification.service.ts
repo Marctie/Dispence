@@ -114,6 +114,10 @@ export class NotificationService {
         largeBody: n.body,
         schedule: { at: new Date(y, m - 1, d, hour, minute), allowWhileIdle: true },
         channelId: CHANNEL_EXPIRY,
+        // Niente sveglia "esatta": basta l'orario con qualche minuto di tolleranza. Con il default (true)
+        // il plugin v8, senza il permesso "Sveglie e promemoria", aprirebbe le impostazioni di Android
+        // a ogni pianificazione e la chiamata resterebbe in attesa.
+        isExactNotification: false,
       };
     });
     if (notifications.length) await LocalNotifications.schedule({ notifications });
@@ -125,7 +129,9 @@ export class NotificationService {
     if (document.visibilityState === 'visible') return;
     const { title, body } = additionsMessage(by, names, shopping);
     await LocalNotifications.schedule({
-      notifications: [{ id: hash('add|' + Date.now()), title, body, largeBody: body, channelId: CHANNEL_PANTRY }],
+      notifications: [{
+        id: hash('add|' + Date.now()), title, body, largeBody: body, channelId: CHANNEL_PANTRY, isExactNotification: false,
+      }],
     });
   }
 
@@ -222,7 +228,7 @@ export class NotificationService {
       await LocalNotifications.schedule({
         notifications: [{
           id: hash('test|' + Date.now()), title: 'Dispensina Digitale',
-          body: 'Le notifiche funzionano 👍', channelId: CHANNEL_EXPIRY,
+          body: 'Le notifiche funzionano 👍', channelId: CHANNEL_EXPIRY, isExactNotification: false,
           schedule: { at: new Date(Date.now() + 3000), allowWhileIdle: true },
         }],
       });
