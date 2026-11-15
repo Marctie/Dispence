@@ -144,6 +144,20 @@
         <ion-label>Notifiche</ion-label>
         <ion-toggle slot="end" [(ngModel)]="notificationsEnabled" (ionChange)="onNotificationsToggle($event)"></ion-toggle>
       </ion-item>
+      @if (!needsHomeScreen && prefs.notificationsEnabled && notifPermission === 'prompt') {
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <p>Le notifiche non sono ancora autorizzate su questo dispositivo: tocca l’interruttore qui sopra e poi “Consenti”.</p>
+          </ion-label>
+        </ion-item>
+      }
+      @if (notifPermission === 'denied') {
+        <ion-item>
+          <ion-label class="ion-text-wrap">
+            <p>Le notifiche sono bloccate dal telefono. Per riattivarle: {{ isNative ? 'Impostazioni di Android → App → Dispensina Digitale → Notifiche' : 'Impostazioni di iPhone → Notifiche → Dispensina' }}, poi torna qui e riaccendi l’interruttore.</p>
+          </ion-label>
+        </ion-item>
+      }
       @if (needsHomeScreen) {
         <ion-item>
           <ion-label class="ion-text-wrap">

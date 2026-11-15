@@ -18,6 +18,8 @@ import { TelemetryService } from './services/telemetry.service';
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
 /** Invito a creare il codice di recupero già mostrato (per utente). Prefisso diverso da dispensa_: sopravvive al logout. */
 const RECOVERY_PROMPT_KEY = 'recovery_prompted_';
+/** Richiesta del permesso notifiche già proposta su questo dispositivo (sopravvive al logout). */
+const NOTIF_PROMPT_KEY = 'notifications_prompted';
 
 @Component({
   selector: 'app-root',
@@ -50,6 +52,9 @@ export class AppComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     // ThemeService si inizializza nel costruttore, qui solo onboarding
     this.showOnboarding = !this.preferencesService.isOnboardingDone();
+    this.onboardingClosed = this.showOnboarding
+      ? new Promise<void>(resolve => (this.resolveOnboarding = resolve))
+      : Promise.resolve();
     this.capturePendingInvite();
 
     try {
@@ -97,6 +102,10 @@ export class AppComponent implements OnInit {
     }
   }
 
+  /** Si risolve quando la presentazione iniziale è chiusa (subito, se non è mostrata). */
+  private onboardingClosed!: Promise<void>;
+  private resolveOnboarding: () => void = () => undefined;
+
   onOnboardingDone(): void {
     try {
       this.preferencesService.markOnboardingDone();
@@ -110,6 +119,7 @@ export class AppComponent implements OnInit {
     }
     this.telemetry.track('onboarding_completato');
     this.showOnboarding = false;
+    this.resolveOnboarding();
   }
 
   async onAuthDone(): Promise<void> {
@@ -143,6 +153,7 @@ export class AppComponent implements OnInit {
       .then(() => this.refreshPush())
       .then(() => this.offerPendingInvite())
       .then(() => this.offerRecoveryCode(userId))
+      .then(() => this.offerNotifications())
       .catch(e => console.error('Sincronizzazione iniziale non riuscita', e));
   }
 
@@ -190,6 +201,44 @@ export class AppComponent implements OnInit {
       ],
     });
     await alert.present();
+    await alert.onDidDismiss();
+  }
+
+  /**
+   * Le notifiche sono "attive" di default nelle preferenze, ma iPhone e Android 13+ richiedono il
+   * permesso di sistema: senza questa richiesta l'interruttore risultava acceso e non arrivava nulla.
+   * La proponiamo una volta per dispositivo, dopo la presentazione iniziale; il tocco su "Attiva"
+   * fa partire la richiesta di sistema (obbligatorio su iPhone).
+   */
+  private async offerNotifications(): Promise<void> {
+    await this.onboardingClosed;
+    const prefs = this.preferencesService.get();
+    if (!prefs.notificationsEnabled || this.notificationService.needsHomeScreenInstall) return;
+    if (await this.notificationService.permissionState() !== 'prompt') return;
+    try {
+      if (localStorage.getItem(NOTIF_PROMPT_KEY)) return;
+      localStorage.setItem(NOTIF_PROMPT_KEY, '1');
+    } catch { /* storage non disponibile: si chiede comunque */ }
+
+    const alert = await this.alertCtrl.create({
+      header: 'Vuoi ricevere gli avvisi?',
+      message: 'Ti avvisiamo quando un prodotto sta per scadere, quando le scorte sono basse e quando chi condivide la dispensa aggiunge qualcosa. Puoi cambiare tutto da Impostazioni → Notifiche.',
+      buttons: [
+        { text: 'Non ora', role: 'cancel' },
+        {
+          text: 'Attiva',
+          handler: () => {
+            this.notificationService.activate()
+              .then(r => this.toast(r === 'granted'
+                ? 'Notifiche attivate'
+                : 'Notifiche non consentite: puoi attivarle da Impostazioni → Notifiche'))
+              .catch(() => undefined);
+          },
+        },
+      ],
+    });
+    await alert.present();
+    await alert.onDidDismiss();
   }
 
   /** Account creati prima del codice di recupero: lo proponiamo una volta per dispositivo. */
@@ -217,6 +266,7 @@ export class AppComponent implements OnInit {
       ],
     });
     await alert.present();
+    await alert.onDidDismiss();
   }
 
   private async showRecoveryCode(code: string): Promise<void> {

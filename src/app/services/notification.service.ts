@@ -64,6 +64,39 @@ export class NotificationService {
     return isIos && !standalone;
   }
 
+  /** Stato reale del permesso di sistema (la preferenza "notifiche attive" da sola non basta). */
+  async permissionState(): Promise<'granted' | 'denied' | 'prompt' | 'unsupported'> {
+    try {
+      if (this.isSupported) {
+        const { display } = await LocalNotifications.checkPermissions();
+        return display === 'granted' ? 'granted' : display === 'denied' ? 'denied' : 'prompt';
+      }
+      if (this.isWebSupported) {
+        return Notification.permission === 'granted' ? 'granted'
+          : Notification.permission === 'denied' ? 'denied' : 'prompt';
+      }
+    } catch { /* plugin non disponibile */ }
+    return 'unsupported';
+  }
+
+  /** Ripianifica con gli ultimi dati (es. subito dopo aver ottenuto il permesso). */
+  async refresh(): Promise<void> {
+    if (this.lastArgs) await this.rescheduleAll(this.lastArgs.products, this.lastArgs.prefs);
+  }
+
+  /**
+   * Chiede il permesso e attiva tutto (push sul web, ripianificazione su Android).
+   * Va chiamata direttamente dal tocco dell'utente: su iPhone la richiesta di sistema compare solo così.
+   */
+  async activate(): Promise<'granted' | 'denied' | 'needs-home-screen'> {
+    if (this.needsHomeScreenInstall) return 'needs-home-screen';
+    const granted = await this.ensurePermission();
+    if (!granted) return 'denied';
+    if (this.isPushSupported) await this.enablePush();
+    await this.refresh();
+    return 'granted';
+  }
+
   async ensurePermission(): Promise<boolean> {
     if (this.isSupported) {
       const { display } = await LocalNotifications.checkPermissions();
@@ -86,12 +119,31 @@ export class NotificationService {
       await this.checkWeb();
       return;
     }
+    // Una ripianificazione alla volta: all'avvio ne partono più d'una quasi insieme (dati, preferenze)
+    // e due giri sovrapposti potrebbero cancellare a vicenda ciò che l'altro ha appena pianificato.
+    const run = this.nativeQueue.then(() => this.rescheduleNative(products, prefs));
+    this.nativeQueue = run.catch(() => undefined);
+    return run;
+  }
 
+  private nativeQueue: Promise<void> = Promise.resolve();
+
+  private async rescheduleNative(products: Product[], prefs: UserPreferences): Promise<void> {
     const pending = await LocalNotifications.getPending();
     const expiryIds = pending.notifications
       .filter(n => (n as LocalNotificationSchema).channelId !== CHANNEL_PANTRY)
-      .map(n => ({ id: n.id }));
-    if (expiryIds.length) await LocalNotifications.cancel({ notifications: expiryIds });
+      .map(n => Number(n.id))
+      .filter(id => Number.isInteger(id))
+      .map(id => ({ id }));
+    if (expiryIds.length) {
+      try {
+        await LocalNotifications.cancel({ notifications: expiryIds });
+      } catch (e) {
+        // Una cancellazione non riuscita non deve impedire di pianificare: gli id sono stabili,
+        // quindi le notifiche ripianificate sostituiscono comunque quelle vecchie con lo stesso id.
+        console.warn('Cancellazione notifiche non riuscita', e);
+      }
+    }
     if (!prefs.notificationsEnabled) return;
 
     const { display } = await LocalNotifications.checkPermissions();

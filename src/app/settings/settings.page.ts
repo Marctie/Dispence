@@ -89,7 +89,17 @@ export class SettingsPage implements OnInit, OnDestroy {
     this.loadBackupState();
   }
 
+  /** Permesso di sistema per le notifiche ('granted' | 'denied' | 'prompt' | 'unsupported'). */
+  notifPermission: string = 'unsupported';
+
+  private async loadPermission(): Promise<void> {
+    this.notifPermission = await this.notificationService.permissionState();
+    // L'interruttore è acceso solo se la preferenza è attiva E il sistema lo consente davvero.
+    this.notificationsEnabled = this.prefs.notificationsEnabled && this.notifPermission === 'granted';
+  }
+
   ionViewWillEnter(): void {
+    this.loadPermission();
     this.loadStats();
     this.loadBackupState();
     if (this.accountEmail) {
@@ -361,23 +371,25 @@ export class SettingsPage implements OnInit, OnDestroy {
 
   async onNotificationsToggle(event: CustomEvent): Promise<void> {
     const enabled = event.detail.checked;
-    if (enabled && this.notificationService.needsHomeScreenInstall) {
-      this.showToast('Su iPhone le notifiche funzionano solo dopo "Aggiungi a schermata Home" da Safari');
-    } else if (enabled && (this.notificationService.isSupported || this.notificationService.isWebSupported)) {
-      const granted = await this.notificationService.ensurePermission();
-      if (!granted) {
+    if (enabled) {
+      const result = await this.notificationService.activate();
+      if (result !== 'granted') {
         this.notificationsEnabled = false;
-        this.showToast('Permesso notifiche negato: attivalo dalle impostazioni del sistema');
+        await this.loadPermission();
+        this.showToast(result === 'needs-home-screen'
+          ? 'Su iPhone le notifiche funzionano solo dopo "Aggiungi a schermata Home" da Safari'
+          : 'Notifiche non consentite: attivale dalle impostazioni del telefono (Notifiche → Dispensina)');
         return;
       }
-      if (this.notificationService.isPushSupported) {
-        const ok = await this.notificationService.enablePush();
-        if (!ok) this.showToast('Notifiche attive solo con l’app aperta: iscrizione al server non riuscita');
+      if (this.notificationService.isPushSupported && !this.notificationService.isPushActive) {
+        this.showToast('Notifiche attive solo con l’app aperta: iscrizione al server non riuscita');
       }
+    } else {
+      await this.notificationService.disablePush();
     }
-    if (!enabled) await this.notificationService.disablePush();
     this.notificationsEnabled = enabled;
     this.preferencesService.update({ notificationsEnabled: enabled });
+    await this.loadPermission();
     this.telemetry.track(enabled ? 'notifiche_attivate' : 'notifiche_disattivate',
       enabled ? { push: this.notificationService.isPushActive } : {});
   }
