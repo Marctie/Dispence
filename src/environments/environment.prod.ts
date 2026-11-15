@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
+  /** Versione dell'app inviata con la telemetria (unico punto da aggiornare a ogni rilascio). */
+  appVersion: '1.1.0',
   /** Indirizzo pubblico della web app: i link nelle email (conferma, nuova password) portano qui. */
   webUrl: 'https://marctie.github.io/Dispence/',
   /**

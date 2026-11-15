@@ -1,10 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { ShoppingItem } from '../models/shopping-item.model';
 import { StorageService } from './storage.service';
+import { TelemetryService } from './telemetry.service';
 
 @Injectable({ providedIn: 'root' })
 export class ShoppingService {
+  /** Solo il tipo di azione sulla lista (mai i nomi). */
+  private telemetry = inject(TelemetryService);
   private readonly KEY = 'dispensa_shopping';
   private items$ = new BehaviorSubject<ShoppingItem[]>([]);
 
@@ -31,6 +34,7 @@ export class ShoppingService {
       addedAt: new Date().toISOString(),
     };
     this.save([...this.items$.value, item]);
+    this.telemetry.track('spesa_aggiunto');
   }
 
   addFromProduct(productId: string, name: string, unit: string, category: string): void {
@@ -47,18 +51,23 @@ export class ShoppingService {
       addedAt: new Date().toISOString(),
     };
     this.save([...this.items$.value, item]);
+    this.telemetry.track('spesa_aggiunto');
   }
 
   toggle(id: string): void {
     this.save(this.items$.value.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
+    this.telemetry.track('spesa_spuntato');
   }
 
   delete(id: string): void {
     this.save(this.items$.value.filter(i => i.id !== id));
+    this.telemetry.track('spesa_rimosso');
   }
 
   clearChecked(): void {
+    const removed = this.items$.value.filter(i => i.checked).length;
     this.save(this.items$.value.filter(i => !i.checked));
+    if (removed) this.telemetry.track('spesa_rimosso', { count: removed });
   }
 
   get pendingCount(): number {

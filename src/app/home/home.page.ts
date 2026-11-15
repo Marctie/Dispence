@@ -8,6 +8,7 @@ import { ShoppingService } from '../services/shopping.service';
 import { AddProductComponent } from '../add-product/add-product.component';
 import { CategoryService } from '../services/category.service';
 import { DemoDataService } from '../services/demo-data.service';
+import { TelemetryService } from '../services/telemetry.service';
 
 @Component({
   selector: 'app-home',
@@ -26,6 +27,7 @@ export class HomePage implements OnInit, OnDestroy {
     private modalCtrl: ModalController,
     private demoDataService: DemoDataService,
     private alertCtrl: AlertController,
+    private telemetry: TelemetryService,
   ) {}
 
   ngOnInit(): void {
@@ -50,7 +52,10 @@ export class HomePage implements OnInit, OnDestroy {
       message: 'Verranno tolti solo i prodotti di esempio; quelli che hai inserito tu restano. Prima viene fatto un backup di sicurezza.',
       buttons: [
         { text: 'Annulla', role: 'cancel' },
-        { text: 'Elimina', role: 'destructive', handler: () => { this.demoDataService.removeDemoData(); } },
+        { text: 'Elimina', role: 'destructive', handler: () => {
+          this.demoDataService.removeDemoData();
+          this.telemetry.track('dati_esempio_rimossi', { origine: 'home' });
+        } },
       ],
     });
     await alert.present();

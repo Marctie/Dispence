@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, inject } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { AlertController, ToastController } from '@ionic/angular';
 import { Capacitor } from '@capacitor/core';
@@ -14,6 +14,7 @@ import { AuthService } from '../services/auth.service';
 import { PantryInfo, PantryMember, SyncService, SyncStatus } from '../services/sync.service';
 import { DEFAULT_PREFERENCES, UserPreferences } from '../models/user-preferences.model';
 import { shareText } from '../shared/share.util';
+import { TelemetryService } from '../services/telemetry.service';
 
 type NotificationToggle = 'notifySummary' | 'notifyExpiry' | 'notifySameDay' | 'notifyExpired'
   | 'notifyLowStock' | 'notifyAdditions';
@@ -52,6 +53,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   expiryBuckets: ExpiryBucket[] = [];
 
   private subs: Subscription[] = [];
+  private telemetry = inject(TelemetryService);
 
   constructor(
     private themeService: ThemeService,
@@ -234,12 +236,14 @@ export class SettingsPage implements OnInit, OnDestroy {
         await navigator.clipboard.writeText(text);
         this.showToast('Invito copiato: incollalo in un messaggio');
       }
+      this.telemetry.track('invito_condiviso');
     } catch { /* condivisione annullata */ }
   }
 
   async copyCode(): Promise<void> {
     try {
       await navigator.clipboard.writeText(this.pantry?.inviteCode ?? '');
+      this.telemetry.track('codice_invito_copiato');
       this.showToast('Codice copiato');
     } catch {
       this.showToast('Codice: ' + this.formattedCode);
@@ -333,20 +337,26 @@ export class SettingsPage implements OnInit, OnDestroy {
   onThemeChange(event: CustomEvent): void {
     this.themeService.setTheme(event.detail.value);
     this.preferencesService.update({ theme: event.detail.value });
+    this.telemetry.track('tema_cambiato', { tema: String(event.detail.value) });
   }
 
   onAlertDaysChange(event: CustomEvent): void {
     this.alertDays = event.detail.value;
     this.preferencesService.update({ expiryAlertDays: this.alertDays });
+    this.telemetry.track('impostazioni_modificate');
   }
 
   onToggle(key: NotificationToggle, event: CustomEvent): void {
     this.preferencesService.update({ [key]: !!event.detail.checked });
+    this.telemetry.track('impostazioni_modificate');
   }
 
   onTimeChange(event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    if (/^\d{2}:\d{2}$/.test(value)) this.preferencesService.update({ notifyTime: value });
+    if (/^\d{2}:\d{2}$/.test(value)) {
+      this.preferencesService.update({ notifyTime: value });
+      this.telemetry.track('impostazioni_modificate');
+    }
   }
 
   async onNotificationsToggle(event: CustomEvent): Promise<void> {
@@ -368,15 +378,19 @@ export class SettingsPage implements OnInit, OnDestroy {
     if (!enabled) await this.notificationService.disablePush();
     this.notificationsEnabled = enabled;
     this.preferencesService.update({ notificationsEnabled: enabled });
+    this.telemetry.track(enabled ? 'notifiche_attivate' : 'notifiche_disattivate',
+      enabled ? { push: this.notificationService.isPushActive } : {});
   }
 
   async testNotification(): Promise<void> {
+    this.telemetry.track('notifica_prova');
     this.showToast(await this.notificationService.sendTest());
   }
 
   async exportBackup(): Promise<void> {
     try {
       await this.backupService.exportToFile();
+      this.telemetry.track('backup_esportato');
       this.showToast('Backup esportato');
     } catch {
       this.showToast('Esportazione non riuscita');
@@ -405,6 +419,7 @@ export class SettingsPage implements OnInit, OnDestroy {
             try {
               const json = await file.text();
               await this.backupService.restoreFromJson(json);
+              this.telemetry.track('backup_ripristinato', { origine: 'file' });
               this.loadStats();
               this.loadBackupState();
               this.showToast('Backup ripristinato');
@@ -430,6 +445,7 @@ export class SettingsPage implements OnInit, OnDestroy {
           handler: async () => {
             try {
               await this.backupService.restoreFromAutoBackup();
+              this.telemetry.track('backup_ripristinato', { origine: 'automatico' });
               this.loadStats();
               this.loadBackupState();
               this.showToast('Backup ripristinato');
@@ -454,6 +470,7 @@ export class SettingsPage implements OnInit, OnDestroy {
           role: 'destructive',
           handler: async () => {
             await this.demoDataService.removeDemoData();
+            this.telemetry.track('dati_esempio_rimossi');
             this.loadStats();
             this.loadBackupState();
             this.showToast('Dati di esempio rimossi');

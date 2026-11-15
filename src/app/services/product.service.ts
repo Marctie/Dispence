@@ -1,10 +1,13 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Product } from '../models/product.model';
 import { StorageService } from './storage.service';
+import { TelemetryService } from './telemetry.service';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
+  /** Solo il tipo di azione (mai il nome del prodotto). */
+  private telemetry = inject(TelemetryService);
   private readonly KEY = 'dispensa_products';
   private readonly PURCHASE_HISTORY_KEY = 'dispensa_purchase_history';
   private products$ = new BehaviorSubject<Product[]>([]);
@@ -44,7 +47,10 @@ export class ProductService {
       addedAt: new Date().toISOString(),
     };
     this.save([...this.products$.value, product]);
-    if (!data.isDemo) this.trackPurchase(product.name);
+    if (!data.isDemo) {
+      this.trackPurchase(product.name);
+      this.telemetry.track('prodotto_aggiunto');
+    }
   }
 
   /** Nomi dei prodotti più spesso aggiunti alla dispensa, in ordine decrescente. */
@@ -66,10 +72,12 @@ export class ProductService {
 
   update(id: string, changes: Partial<Product>): void {
     this.save(this.products$.value.map(p => (p.id === id ? { ...p, ...changes } : p)));
+    this.telemetry.track('prodotto_modificato');
   }
 
   delete(id: string): void {
     this.save(this.products$.value.filter(p => p.id !== id));
+    this.telemetry.track('prodotto_eliminato');
   }
 
   getExpiringWithinDays(days: number): Product[] {
