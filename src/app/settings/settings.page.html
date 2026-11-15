@@ -184,7 +184,7 @@
         <ion-icon name="cloud-upload-outline" slot="start" color="primary"></ion-icon>
         <ion-label>Ripristina da file</ion-label>
       </ion-item>
-      <input #backupFileInput type="file" accept="application/json" hidden (change)="onBackupFileSelected($event)" />
+      <input #backupFileInput type="file" accept="application/json,.json" hidden (change)="onBackupFileSelected($event)" />
       @if (autoBackupDate) {
         <ion-item button="true" (click)="restoreAutoBackup()" detail="false">
           <ion-icon name="time-outline" slot="start" color="primary"></ion-icon>

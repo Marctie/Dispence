@@ -8,6 +8,8 @@ platformBrowserDynamic().bootstrapModule(AppModule)
 
 // PWA (solo web, es. GitHub Pages / iPhone): nell'app nativa il service worker non serve.
 if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator && location.protocol === 'https:') {
+  // Chiede al browser di non cancellare i dati locali (localStorage) per liberare spazio
+  (navigator as any).storage?.persist?.().catch(() => undefined);
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register(new URL('sw.js', document.baseURI).href)
