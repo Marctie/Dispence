@@ -71,8 +71,8 @@ export class AppComponent implements OnInit {
           .catch(e => console.error('Pianificazione notifiche non riuscita', e));
       });
 
-    this.syncService.remoteAdditions$.subscribe(({ by, names }) => {
-      this.notificationService.showAdditions(by, names, this.preferencesService.get())
+    this.syncService.remoteAdditions$.subscribe(({ by, names, shopping }) => {
+      this.notificationService.showAdditions(by, names, shopping, this.preferencesService.get())
         .catch(() => undefined);
     });
 

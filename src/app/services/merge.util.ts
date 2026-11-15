@@ -120,6 +120,12 @@ export function mergeShared(base: SharedData | null, localIn: SharedData, remote
   };
 }
 
+/** Voci della lista della spesa presenti in `after` ma non in `before`. */
+export function addedShoppingItems(before: SharedData | null, after: SharedData): { id: string; name: string }[] {
+  const prev = new Set((before?.shoppingItems ?? []).map(i => i.id));
+  return normalize(after).shoppingItems.filter(i => !prev.has(i.id)).map(i => ({ id: i.id, name: i.name }));
+}
+
 /** Prodotti presenti in `after` ma non in `before`. */
 export function addedProducts(before: SharedData | null, after: SharedData): { id: string; name: string }[] {
   const prev = new Set((before?.products ?? []).map(p => p.id));

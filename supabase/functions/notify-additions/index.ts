@@ -1,6 +1,6 @@
-// Avvisa gli altri membri della dispensa che sono stati aggiunti dei prodotti.
-// Chiamata dall'app dopo un salvataggio riuscito: { names: string[] }.
-import { DEFAULT_NOTIFICATION_PREFS } from '../_shared/planner.ts';
+// Avvisa gli altri membri della dispensa che sono stati aggiunti prodotti o voci della spesa.
+// Chiamata dall'app dopo un salvataggio riuscito: { names: string[], shopping?: string[] }.
+import { DEFAULT_NOTIFICATION_PREFS, additionsMessage } from '../_shared/planner.ts';
 import { admin, cors, json, sendToUsers, userFromRequest } from '../_shared/push.ts';
 
 Deno.serve(async req => {
@@ -10,16 +10,18 @@ Deno.serve(async req => {
   const me = await userFromRequest(req);
   if (!me) return json({ error: 'unauthorized' }, 401);
 
-  let names: string[] = [];
+  const clean = (v: unknown): string[] => (Array.isArray(v) ? v : [])
+    .filter((n: unknown) => typeof n === 'string')
+    .map((n: string) => n.trim().slice(0, 80))
+    .filter(Boolean)
+    .slice(0, 20);
+  let names: string[] = [], shopping: string[] = [];
   try {
     const body = await req.json();
-    names = (Array.isArray(body?.names) ? body.names : [])
-      .filter((n: unknown) => typeof n === 'string')
-      .map((n: string) => n.trim().slice(0, 80))
-      .filter(Boolean)
-      .slice(0, 20);
+    names = clean(body?.names);
+    shopping = clean(body?.shopping);
   } catch { /* corpo non valido */ }
-  if (!names.length) return json({ sent: 0 });
+  if (!names.length && !shopping.length) return json({ sent: 0 });
 
   const { data: mine } = await admin.from('pantry_members')
     .select('pantry_id, display_name').eq('user_id', me).maybeSingle();
@@ -39,12 +41,7 @@ Deno.serve(async req => {
     .map(s => s.user_id));
   const targets = otherIds.filter(id => !muted.has(id));
 
-  const who = mine.display_name || 'Qualcuno';
-  const list = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} e altri ${names.length - 4}`;
-  const sent = await sendToUsers(targets, {
-    title: `${who} ha aggiunto alla dispensa`,
-    body: list,
-    tag: 'additions',
-  });
+  const { title, body } = additionsMessage(mine.display_name, names, shopping);
+  const sent = await sendToUsers(targets, { title, body, tag: 'additions' });
   return json({ sent });
 });

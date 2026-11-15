@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { Product } from '../models/product.model';
 import { UserPreferences } from '../models/user-preferences.model';
 import {
-  dayNumber, hash, localDayKey, notificationsForDay, parseTime, planNotifications,
+  additionsMessage, dayNumber, hash, localDayKey, notificationsForDay, parseTime, planNotifications,
 } from '../notifications/planner';
 import { AuthService } from './auth.service';
 
@@ -120,17 +120,12 @@ export class NotificationService {
   }
 
   /** Android: prodotti aggiunti da un altro membro mentre l'app è in secondo piano. */
-  async showAdditions(by: string, names: string[], prefs: UserPreferences): Promise<void> {
+  async showAdditions(by: string, names: string[], shopping: string[], prefs: UserPreferences): Promise<void> {
     if (!this.isSupported || !prefs.notificationsEnabled || !prefs.notifyAdditions) return;
     if (document.visibilityState === 'visible') return;
-    const list = names.length <= 4 ? names.join(', ') : `${names.slice(0, 4).join(', ')} e altri ${names.length - 4}`;
+    const { title, body } = additionsMessage(by, names, shopping);
     await LocalNotifications.schedule({
-      notifications: [{
-        id: hash('add|' + Date.now()),
-        title: `${by} ha aggiunto alla dispensa`,
-        body: list,
-        channelId: CHANNEL_PANTRY,
-      }],
+      notifications: [{ id: hash('add|' + Date.now()), title, body, largeBody: body, channelId: CHANNEL_PANTRY }],
     });
   }
 

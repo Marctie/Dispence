@@ -1,5 +1,5 @@
 import { DEFAULT_PREFERENCES } from '../models/user-preferences.model';
-import { NotificationPrefs, PlannerProduct, dayKey, dayNumber, notificationsForDay, planNotifications } from './planner';
+import { NotificationPrefs, PlannerProduct, additionsMessage, dayKey, dayNumber, notificationsForDay, planNotifications } from './planner';
 
 const TODAY = '2026-11-15';
 const inDays = (n: number) => dayKey(dayNumber(TODAY) + n);
@@ -55,6 +55,12 @@ describe('Pianificatore notifiche', () => {
     expect(plan[0].day).toBe(TODAY);
     expect(plan[0].body).toContain('Scorte basse: Caffè');
     expect(plan.slice(1).some(n => n.body.includes('Caffè'))).toBeFalse();
+  });
+
+  it('testo dell’avviso aggiunte: dispensa, spesa o entrambe', () => {
+    expect(additionsMessage('anna', ['Latte'], [])).toEqual({ title: 'anna ha aggiunto alla dispensa', body: 'Latte' });
+    expect(additionsMessage('anna', [], ['Pane', 'Uova'])).toEqual({ title: 'anna ha aggiunto alla lista della spesa', body: 'Pane, Uova' });
+    expect(additionsMessage('', ['A'], ['B'])).toEqual({ title: 'Qualcuno ha aggiunto', body: 'Dispensa: A\nSpesa: B' });
   });
 
   it('id stabili e positivi (richiesti da Android)', () => {

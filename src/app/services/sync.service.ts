@@ -5,7 +5,9 @@ import { AuthService } from './auth.service';
 import { BackupService } from './backup.service';
 import { PreferencesService } from './preferences.service';
 import { StorageService } from './storage.service';
-import { EMPTY_SHARED, SharedData, addedProducts, mergeShared, normalize, sharedEquals } from './merge.util';
+import {
+  EMPTY_SHARED, SharedData, addedProducts, addedShoppingItems, mergeShared, normalize, sharedEquals,
+} from './merge.util';
 
 const OWNER_KEY = 'dispensa_sync_owner';
 const PANTRY_KEY = 'dispensa_sync_pantry';
@@ -37,10 +39,13 @@ export interface PantryMember {
   isMe: boolean;
 }
 
-/** Prodotti aggiunti da un altro membro (per la notifica locale su Android). */
+/** Prodotti e voci della spesa aggiunti da un altro membro (per la notifica locale su Android). */
 export interface RemoteAdditions {
   by: string;
+  /** Prodotti aggiunti alla dispensa. */
   names: string[];
+  /** Voci aggiunte alla lista della spesa. */
+  shopping: string[];
 }
 
 interface SyncBase {
@@ -261,7 +266,10 @@ export class SyncService {
         // Prodotti aggiunti da altri dall'ultima sincronizzazione.
         if (base && storedBase!.version !== row.version && row.updated_by && row.updated_by !== this.userId) {
           const names = addedProducts(base, remote).map(p => p.name);
-          if (names.length) this.remoteAdditions$.next({ by: this.memberName(row.updated_by), names });
+          const shopping = addedShoppingItems(base, remote).map(i => i.name);
+          if (names.length || shopping.length) {
+            this.remoteAdditions$.next({ by: this.memberName(row.updated_by), names, shopping });
+          }
         }
 
         let version = row.version;
@@ -275,7 +283,10 @@ export class SyncService {
           if (saveError) { this.status$.next('error'); return; }
           if (!saved?.length) continue;          // qualcuno ha salvato nel frattempo: si riprova
           version = row.version + 1;
-          this.notifyAdditions(addedProducts(remote, merged).map(p => p.name));
+          this.notifyAdditions(
+            addedProducts(remote, merged).map(p => p.name),
+            addedShoppingItems(remote, merged).map(i => i.name),
+          );
         }
 
         if (!sharedEquals(merged, local)) this.applyShared(merged);
@@ -292,10 +303,10 @@ export class SyncService {
   }
 
   /** Avvisa gli altri membri (notifica push) dei prodotti appena aggiunti da questo dispositivo. */
-  private notifyAdditions(names: string[]): void {
-    if (!names.length || !this.isShared) return;
+  private notifyAdditions(names: string[], shopping: string[]): void {
+    if ((!names.length && !shopping.length) || !this.isShared) return;
     this.auth.supabase.functions
-      .invoke('notify-additions', { body: { names: names.slice(0, 20) } })
+      .invoke('notify-additions', { body: { names: names.slice(0, 20), shopping: shopping.slice(0, 20) } })
       .catch(() => undefined);
   }
 

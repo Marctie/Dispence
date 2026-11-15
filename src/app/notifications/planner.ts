@@ -208,6 +208,14 @@ export function planNotifications(
   return out;
 }
 
+/** Testo dell'avviso "X ha aggiunto…" (dispensa e/o lista della spesa). Usato da app e server. */
+export function additionsMessage(by: string, products: string[], shopping: string[]): { title: string; body: string } {
+  const who = by || 'Qualcuno';
+  if (products.length && !shopping.length) return { title: `${who} ha aggiunto alla dispensa`, body: list(products) };
+  if (shopping.length && !products.length) return { title: `${who} ha aggiunto alla lista della spesa`, body: list(shopping) };
+  return { title: `${who} ha aggiunto`, body: `Dispensa: ${list(products)}\nSpesa: ${list(shopping)}` };
+}
+
 /** Hash stabile a 31 bit (gli id delle notifiche Android devono essere interi positivi). */
 export function hash(s: string): number {
   let h = 2166136261;

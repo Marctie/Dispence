@@ -3,8 +3,13 @@ import { SyncService } from './sync.service';
 import { AuthService } from './auth.service';
 import { ProductService } from './product.service';
 import { PreferencesService } from './preferences.service';
+import { ShoppingService } from './shopping.service';
 
 const OTHER = 'user-other';
+const item = (id: string, name: string) => ({
+  id, name, quantity: 1, unit: 'pz', category: 'altro', checked: false, linkedProductId: null,
+  addedAt: '2026-01-01T00:00:00.000Z',
+});
 const prod = (id: string, name: string) => ({
   id, name, category: 'altro', location: 'pantry', quantity: 1, unit: 'pz',
   expiryDate: null, notes: '', addedAt: '2026-01-01T00:00:00.000Z', lowStockThreshold: null, price: null,
@@ -189,7 +194,7 @@ describe('SyncService (dispensa condivisa)', () => {
     await sync.sync();
 
     expect(products.getAll().map(p => p.name)).toEqual(['Mele']);
-    expect(seen).toEqual([{ by: OTHER, names: ['Mele'] }]);
+    expect(seen).toEqual([{ by: OTHER, names: ['Mele'], shopping: [] }]);
     sync.stop();
   });
 
@@ -203,7 +208,44 @@ describe('SyncService (dispensa condivisa)', () => {
     products.replaceAll([prod('m3', 'Burro')]);
     await sync.sync();
 
-    expect(db.invoked).toEqual([{ name: 'notify-additions', body: { names: ['Burro'] } }]);
+    expect(db.invoked).toEqual([{ name: 'notify-additions', body: { names: ['Burro'], shopping: [] } }]);
+    sync.stop();
+  });
+
+  it('lista della spesa condivisa: le voci aggiunte da un altro arrivano e vengo avvisato', async () => {
+    const shared = db.createPantry(OTHER, { products: [], shoppingItems: [] });
+    const sync = setup();
+    await sync.start('user-me');
+    await sync.joinPantry(db.pantries.get(shared)!.invite_code);
+
+    const seen: any[] = [];
+    sync.remoteAdditions$.subscribe(a => seen.push(a));
+    db.otherSaves(shared, d => ({ ...d, shoppingItems: [item('s1', 'Latte')] }));
+    await sync.sync();
+
+    expect(TestBed.inject(ShoppingService).getAll().map(i => i.name)).toEqual(['Latte']);
+    expect(seen).toEqual([{ by: OTHER, names: [], shopping: ['Latte'] }]);
+    sync.stop();
+  });
+
+  it('lista della spesa condivisa: io spunto una voce mentre l’altro ne aggiunge un’altra, restano entrambe le modifiche', async () => {
+    const shared = db.createPantry(OTHER, { products: [], shoppingItems: [item('s1', 'Pane')] });
+    const sync = setup();
+    await sync.start('user-me');
+    await sync.joinPantry(db.pantries.get(shared)!.invite_code);
+    const shopping = TestBed.inject(ShoppingService);
+    db.invoked = [];
+
+    db.beforeUpdate = () => db.otherSaves(shared, d => ({ ...d, shoppingItems: [...d.shoppingItems, item('s2', 'Uova')] }));
+    shopping.toggle('s1');
+    shopping.add({ name: 'Caffè', quantity: 1, unit: 'pz', category: 'altro', checked: false, linkedProductId: null } as any);
+    await sync.sync();
+
+    const online = db.pantries.get(shared)!.data.shoppingItems;
+    expect(online.map((i: any) => i.name).sort()).toEqual(['Caffè', 'Pane', 'Uova']);
+    expect(online.find((i: any) => i.id === 's1').checked).toBeTrue();
+    expect(shopping.getAll().map(i => i.name).sort()).toEqual(['Caffè', 'Pane', 'Uova']);
+    expect(db.invoked[0].body.shopping).toEqual(['Caffè']);
     sync.stop();
   });
 
