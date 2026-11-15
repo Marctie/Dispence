@@ -98,6 +98,50 @@ export class AuthService {
     this.passwordRecovery$.next(false);
   }
 
+  // ── Codice di recupero (reimpostare la password senza email) ──────────────
+
+  /** Genera un nuovo codice di recupero per l'utente corrente (il precedente smette di valere). */
+  async createRecoveryCode(): Promise<string> {
+    const { data, error } = await this.supabase.rpc('set_recovery_code');
+    if (error || !data) throw new Error('Non è stato possibile creare il codice, riprova');
+    return data as string;
+  }
+
+  /** Data di creazione del codice di recupero, o null se l'utente non l'ha mai creato. */
+  async recoveryCodeCreatedAt(): Promise<string | null> {
+    const { data, error } = await this.supabase.rpc('recovery_code_created_at');
+    if (error) throw error;
+    return (data as string | null) ?? null;
+  }
+
+  /**
+   * Reimposta la password con email + codice di recupero, poi accede.
+   * @returns il nuovo codice di recupero (quello usato non vale più).
+   */
+  async recoverWithCode(email: string, code: string, password: string): Promise<string> {
+    let res: Response;
+    try {
+      res = await fetch(`${environment.supabase.url}/functions/v1/recover-password`, {
+        method: 'POST',
+        headers: { apikey: environment.supabase.publishableKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), code, password }),
+      });
+    } catch {
+      throw new Error('Nessuna connessione a internet');
+    }
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.ok) {
+      switch (body.error) {
+        case 'invalid_code': throw new Error('Email o codice di recupero non corretti');
+        case 'too_many_attempts': throw new Error('Troppi tentativi sbagliati: riprova tra un’ora');
+        case 'weak_password': throw new Error('Password troppo debole: usa almeno 8 caratteri');
+        default: throw new Error('Si è verificato un errore, riprova');
+      }
+    }
+    await this.signIn(email, password);
+    return body.newCode as string;
+  }
+
   /** Esce dall'account e cancella dal dispositivo tutti i dati della dispensa. */
   async signOut(): Promise<void> {
     try {

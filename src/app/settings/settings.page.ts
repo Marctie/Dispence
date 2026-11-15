@@ -13,6 +13,7 @@ import { NotificationService } from '../services/notification.service';
 import { AuthService } from '../services/auth.service';
 import { PantryInfo, PantryMember, SyncService, SyncStatus } from '../services/sync.service';
 import { DEFAULT_PREFERENCES, UserPreferences } from '../models/user-preferences.model';
+import { shareText } from '../shared/share.util';
 
 type NotificationToggle = 'notifySummary' | 'notifyExpiry' | 'notifySameDay' | 'notifyExpired'
   | 'notifyLowStock' | 'notifyAdditions';
@@ -36,6 +37,8 @@ export class SettingsPage implements OnInit, OnDestroy {
   syncStatus: SyncStatus = 'idle';
   pantry: PantryInfo | null = null;
   members: PantryMember[] = [];
+  /** Data del codice di recupero: undefined = non ancora caricata, null = mai creato. */
+  recoveryCreatedAt: string | null | undefined = undefined;
 
   // stats
   totalProducts = 0;
@@ -87,7 +90,59 @@ export class SettingsPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.loadStats();
     this.loadBackupState();
-    if (this.accountEmail) this.syncService.loadMembers();
+    if (this.accountEmail) {
+      this.syncService.loadMembers();
+      this.authService.recoveryCodeCreatedAt()
+        .then(d => (this.recoveryCreatedAt = d))
+        .catch(() => (this.recoveryCreatedAt = undefined));
+    }
+  }
+
+  get recoveryLabel(): string {
+    if (this.recoveryCreatedAt === undefined) return 'Serve per reimpostare la password senza email';
+    if (this.recoveryCreatedAt === null) return 'Non ancora creato: crealo ora, ti servirà se dimentichi la password';
+    return 'Creato il ' + new Date(this.recoveryCreatedAt).toLocaleDateString('it-IT') + ' · tocca per crearne uno nuovo';
+  }
+
+  async manageRecoveryCode(): Promise<void> {
+    const create = async () => {
+      try {
+        const code = await this.authService.createRecoveryCode();
+        this.recoveryCreatedAt = new Date().toISOString();
+        await this.showRecoveryCode(code);
+      } catch (e) {
+        this.showToast(e instanceof Error ? e.message : 'Operazione non riuscita');
+      }
+    };
+    if (!this.recoveryCreatedAt) { await create(); return; }
+    const alert = await this.alertCtrl.create({
+      header: 'Creare un nuovo codice?',
+      message: 'Il codice di recupero attuale smetterà di funzionare.',
+      buttons: [{ text: 'Annulla', role: 'cancel' }, { text: 'Nuovo codice', handler: () => { create(); } }],
+    });
+    await alert.present();
+  }
+
+  private async showRecoveryCode(code: string): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Codice di recupero',
+      subHeader: code,
+      message: 'Conservalo in un posto sicuro: serve per reimpostare la password se la dimentichi. Non verrà più mostrato.',
+      backdropDismiss: false,
+      buttons: [
+        {
+          text: 'Copia / invia',
+          handler: () => {
+            shareText('Codice di recupero Dispensina Digitale',
+              `Codice di recupero di Dispensina Digitale (account ${this.accountEmail}): ${code}`)
+              .then(r => { if (r === 'copied') this.showToast('Codice copiato'); });
+            return false;
+          },
+        },
+        { text: 'Fatto', role: 'cancel' },
+      ],
+    });
+    await alert.present();
   }
 
   ngOnDestroy(): void {

@@ -27,6 +27,20 @@
 
 <ion-content>
 
+  <!-- Prodotti di esempio dell'onboarding: invito a eliminarli -->
+  @if (demoCount > 0) {
+    <div class="demo-banner" role="note">
+      <p class="demo-banner__title">👋 Questi sono prodotti di esempio</p>
+      <p class="demo-banner__text">
+        Servono solo a mostrarti come funziona l'app. Quando hai dato un'occhiata, eliminali e inizia ad aggiungere i tuoi
+        (puoi farlo anche da Impostazioni → Backup e dati).
+      </p>
+      <ion-button size="small" color="primary" (click)="removeDemo()">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>Elimina i {{ demoCount }} prodotti di esempio
+      </ion-button>
+    </div>
+  }
+
   <!-- Alert banner scaduti -->
   @if (expiredProducts.length > 0) {
     <div class="alert-banner alert-banner--danger" role="alert">

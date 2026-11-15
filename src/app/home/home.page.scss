@@ -147,3 +147,16 @@
 
   ion-button { --border-radius: var(--radius-md); font-weight: 600; }
 }
+
+// ── Avviso prodotti di esempio ────────────────────────────────────────────────
+.demo-banner {
+  margin: var(--space-md) var(--space-md) 0;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
+  border: 1px solid rgba(var(--ion-color-primary-rgb), 0.3);
+
+  &__title { margin: 0 0 4px; font-weight: 700; color: var(--color-text); }
+  &__text { margin: 0 0 var(--space-sm); font-size: 0.9rem; line-height: 1.4; color: var(--color-text-muted); }
+  ion-button { margin: 0; white-space: normal; }
+}

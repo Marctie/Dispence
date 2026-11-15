@@ -18,6 +18,13 @@
             <p>{{ syncLabel }}</p>
           </ion-label>
         </ion-item>
+        <ion-item button="true" (click)="manageRecoveryCode()" detail="false">
+          <ion-icon name="key-outline" slot="start" [color]="recoveryCreatedAt === null ? 'warning' : 'primary'"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <h3>Codice di recupero</h3>
+            <p>{{ recoveryLabel }}</p>
+          </ion-label>
+        </ion-item>
         <ion-item button="true" (click)="logout()" detail="false">
           <ion-icon name="log-out-outline" slot="start" color="primary"></ion-icon>
           <ion-label>Esci</ion-label>

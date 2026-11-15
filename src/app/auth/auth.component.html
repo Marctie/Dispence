@@ -1,55 +1,91 @@
 <div class="auth-screen">
-  <form class="auth-card" (ngSubmit)="submit()" novalidate>
-    <img class="auth-logo" src="assets/icon/icon-192.png" alt="" width="72" height="72" />
-    <p class="auth-brand">Dispensina Digitale</p>
-    <h1 class="auth-title">{{ title }}</h1>
-
-    @if (mode === 'login') {
-      <p class="auth-hint">La tua dispensa è privata: solo tu, con il tuo account, puoi vederla e modificarla.</p>
-    }
-    @if (mode === 'reset') {
-      <p class="auth-hint">Inserisci l’email del tuo account: ti invieremo un link per scegliere una nuova password.</p>
-    }
-
-    <ion-list lines="full" class="auth-fields">
-      @if (mode !== 'recovery') {
-        <ion-item>
-          <ion-input label="Email" labelPlacement="stacked" type="email" name="email" inputmode="email"
-            autocomplete="email" autocapitalize="off" [(ngModel)]="email" [disabled]="busy"></ion-input>
-        </ion-item>
-      }
-      @if (mode !== 'reset') {
-        <ion-item>
-          <ion-input [label]="mode === 'recovery' ? 'Nuova password' : 'Password'" labelPlacement="stacked"
-            type="password" name="password"
-            [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
-            [(ngModel)]="password" [disabled]="busy">
-            <ion-input-password-toggle slot="end"></ion-input-password-toggle>
-          </ion-input>
-        </ion-item>
-      }
-      @if (mode === 'signup' || mode === 'recovery') {
-        <ion-item>
-          <ion-input label="Ripeti password" labelPlacement="stacked" type="password" name="confirm"
-            autocomplete="new-password" [(ngModel)]="confirm" [disabled]="busy"></ion-input>
-        </ion-item>
-      }
-    </ion-list>
-
-    @if (error) { <p class="auth-msg auth-msg--error" role="alert">{{ error }}</p> }
-    @if (info) { <p class="auth-msg auth-msg--info" role="status">{{ info }}</p> }
-
-    <ion-button type="submit" expand="block" [disabled]="busy">
-      @if (busy) { <ion-spinner name="crescent"></ion-spinner> } @else { {{ submitLabel }} }
-    </ion-button>
-
-    <div class="auth-links">
-      @if (mode === 'login') {
-        <ion-button fill="clear" size="small" (click)="setMode('signup')">Non hai un account? Registrati</ion-button>
-        <ion-button fill="clear" size="small" color="medium" (click)="setMode('reset')">Password dimenticata?</ion-button>
-      } @else if (mode !== 'recovery') {
-        <ion-button fill="clear" size="small" (click)="setMode('login')">Hai già un account? Accedi</ion-button>
-      }
+  @if (mode === 'saveCode') {
+    <div class="auth-card">
+      <img class="auth-logo" src="assets/icon/icon-192.png" alt="" width="72" height="72" />
+      <p class="auth-brand">Dispensina Digitale</p>
+      <h1 class="auth-title">{{ title }}</h1>
+      <p class="auth-hint">
+        Conservalo in un posto sicuro (note, foto, password manager): ti servirà per reimpostare la password
+        se la dimentichi. È mostrato solo adesso; puoi crearne uno nuovo da Impostazioni → Account.
+      </p>
+      <p class="recovery-code" aria-label="Codice di recupero">{{ recoveryCode }}</p>
+      @if (info) { <p class="auth-msg auth-msg--info" role="status">{{ info }}</p> }
+      <div class="code-actions">
+        <ion-button fill="outline" (click)="copyCode()">
+          <ion-icon name="copy-outline" slot="start"></ion-icon>Copia
+        </ion-button>
+        <ion-button fill="outline" (click)="shareCode()">
+          <ion-icon name="share-social-outline" slot="start"></ion-icon>Salva / invia
+        </ion-button>
+      </div>
+      <ion-button expand="block" (click)="codeSaved()">Ho salvato il codice, continua</ion-button>
     </div>
-  </form>
+  } @else {
+    <form class="auth-card" (ngSubmit)="submit()" novalidate>
+      <img class="auth-logo" src="assets/icon/icon-192.png" alt="" width="72" height="72" />
+      <p class="auth-brand">Dispensina Digitale</p>
+      <h1 class="auth-title">{{ title }}</h1>
+
+      @if (mode === 'login') {
+        <p class="auth-hint">La tua dispensa è privata: solo tu, con il tuo account, puoi vederla e modificarla.</p>
+      }
+      @if (mode === 'reset') {
+        <p class="auth-hint">Inserisci la tua email, il <strong>codice di recupero</strong> che hai salvato quando ti sei registrato e una nuova password.</p>
+      }
+      @if (mode === 'resetEmail') {
+        <p class="auth-hint">Inserisci l’email del tuo account: ti invieremo un link per scegliere una nuova password.</p>
+      }
+
+      <ion-list lines="full" class="auth-fields">
+        @if (needsEmail) {
+          <ion-item>
+            <ion-input label="Email" labelPlacement="stacked" type="email" name="email" inputmode="email"
+              autocomplete="email" autocapitalize="off" [(ngModel)]="email" [disabled]="busy"></ion-input>
+          </ion-item>
+        }
+        @if (mode === 'reset') {
+          <ion-item>
+            <ion-input label="Codice di recupero" labelPlacement="stacked" type="text" name="code"
+              placeholder="ABCD-EFGH-JKLM-NPQR" autocomplete="one-time-code" autocapitalize="characters"
+              spellcheck="false" [(ngModel)]="code" [disabled]="busy"></ion-input>
+          </ion-item>
+        }
+        @if (needsPassword) {
+          <ion-item>
+            <ion-input [label]="mode === 'login' ? 'Password' : 'Nuova password'" labelPlacement="stacked"
+              type="password" name="password"
+              [autocomplete]="mode === 'login' ? 'current-password' : 'new-password'"
+              [(ngModel)]="password" [disabled]="busy">
+              <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+            </ion-input>
+          </ion-item>
+        }
+        @if (needsConfirm) {
+          <ion-item>
+            <ion-input label="Ripeti password" labelPlacement="stacked" type="password" name="confirm"
+              autocomplete="new-password" [(ngModel)]="confirm" [disabled]="busy"></ion-input>
+          </ion-item>
+        }
+      </ion-list>
+
+      @if (error) { <p class="auth-msg auth-msg--error" role="alert">{{ error }}</p> }
+      @if (info) { <p class="auth-msg auth-msg--info" role="status">{{ info }}</p> }
+
+      <ion-button type="submit" expand="block" [disabled]="busy">
+        @if (busy) { <ion-spinner name="crescent"></ion-spinner> } @else { {{ submitLabel }} }
+      </ion-button>
+
+      <div class="auth-links">
+        @if (mode === 'login') {
+          <ion-button fill="clear" size="small" (click)="setMode('signup')">Non hai un account? Registrati</ion-button>
+          <ion-button fill="clear" size="small" color="medium" (click)="setMode('reset')">Password dimenticata?</ion-button>
+        } @else if (mode === 'reset') {
+          <ion-button fill="clear" size="small" color="medium" (click)="setMode('resetEmail')">Non hai il codice? Ricevi un link via email</ion-button>
+          <ion-button fill="clear" size="small" (click)="setMode('login')">Torna all’accesso</ion-button>
+        } @else if (mode !== 'recovery') {
+          <ion-button fill="clear" size="small" (click)="setMode('login')">Hai già un account? Accedi</ion-button>
+        }
+      </div>
+    </form>
+  }
 </div>

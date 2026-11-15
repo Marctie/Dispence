@@ -11,8 +11,11 @@ import { CHANNEL_EXPIRY, CHANNEL_PANTRY, NotificationService } from './services/
 import { DemoDataService } from './services/demo-data.service';
 import { AuthService } from './services/auth.service';
 import { SyncService } from './services/sync.service';
+import { shareText } from './shared/share.util';
 
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
+/** Invito a creare il codice di recupero già mostrato (per utente). Prefisso diverso da dispensa_: sopravvive al logout. */
+const RECOVERY_PROMPT_KEY = 'recovery_prompted_';
 
 @Component({
   selector: 'app-root',
@@ -132,6 +135,7 @@ export class AppComponent implements OnInit {
     this.syncService.start(userId)
       .then(() => this.refreshPush())
       .then(() => this.offerPendingInvite())
+      .then(() => this.offerRecoveryCode(userId))
       .catch(e => console.error('Sincronizzazione iniziale non riuscita', e));
   }
 
@@ -176,6 +180,55 @@ export class AppComponent implements OnInit {
               .catch(e => this.toast(e instanceof Error ? e.message : 'Invito non valido'));
           },
         },
+      ],
+    });
+    await alert.present();
+  }
+
+  /** Account creati prima del codice di recupero: lo proponiamo una volta per dispositivo. */
+  private async offerRecoveryCode(userId: string): Promise<void> {
+    try {
+      if (localStorage.getItem(RECOVERY_PROMPT_KEY + userId)) return;
+      if (await this.authService.recoveryCodeCreatedAt()) return;
+      localStorage.setItem(RECOVERY_PROMPT_KEY + userId, '1');
+    } catch {
+      return;
+    }
+    const alert = await this.alertCtrl.create({
+      header: 'Crea il tuo codice di recupero',
+      message: 'Ti servirà per reimpostare la password se la dimentichi. Ci vogliono 10 secondi.',
+      buttons: [
+        { text: 'Più tardi', role: 'cancel' },
+        {
+          text: 'Crea ora',
+          handler: () => {
+            this.authService.createRecoveryCode()
+              .then(code => this.showRecoveryCode(code))
+              .catch(() => this.toast('Puoi crearlo da Impostazioni → Account'));
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async showRecoveryCode(code: string): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Codice di recupero',
+      subHeader: code,
+      message: 'Conservalo in un posto sicuro: non verrà più mostrato. Puoi crearne uno nuovo da Impostazioni → Account.',
+      backdropDismiss: false,
+      buttons: [
+        {
+          text: 'Copia / invia',
+          handler: () => {
+            shareText('Codice di recupero Dispensina Digitale',
+              `Codice di recupero di Dispensina Digitale (account ${this.authService.user?.email ?? ''}): ${code}`)
+              .then(r => { if (r === 'copied') this.toast('Codice copiato'); });
+            return false;
+          },
+        },
+        { text: 'Fatto', role: 'cancel' },
       ],
     });
     await alert.present();

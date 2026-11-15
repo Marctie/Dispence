@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ModalController } from '@ionic/angular';
+import { AlertController, ModalController } from '@ionic/angular';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Product } from '../models/product.model';
@@ -7,6 +7,7 @@ import { ProductService } from '../services/product.service';
 import { ShoppingService } from '../services/shopping.service';
 import { AddProductComponent } from '../add-product/add-product.component';
 import { CategoryService } from '../services/category.service';
+import { DemoDataService } from '../services/demo-data.service';
 
 @Component({
   selector: 'app-home',
@@ -23,6 +24,8 @@ export class HomePage implements OnInit, OnDestroy {
     private shoppingService: ShoppingService,
     private categoryService: CategoryService,
     private modalCtrl: ModalController,
+    private demoDataService: DemoDataService,
+    private alertCtrl: AlertController,
   ) {}
 
   ngOnInit(): void {
@@ -37,6 +40,21 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   get totalProducts(): number { return this.products.length; }
+
+  /** Prodotti di esempio dell'onboarding ancora presenti: vanno tolti prima di usare l'app sul serio. */
+  get demoCount(): number { return this.products.filter(p => p.isDemo).length; }
+
+  async removeDemo(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Eliminare i prodotti di esempio?',
+      message: 'Verranno tolti solo i prodotti di esempio; quelli che hai inserito tu restano. Prima viene fatto un backup di sicurezza.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        { text: 'Elimina', role: 'destructive', handler: () => { this.demoDataService.removeDemoData(); } },
+      ],
+    });
+    await alert.present();
+  }
 
   get expiredProducts(): Product[] { return this.productService.getExpired(); }
 

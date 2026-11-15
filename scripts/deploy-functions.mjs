@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const PROJECT_REF = 'yzufrpbmraqmacodcsza';
-const FUNCTIONS = ['notify-additions', 'push-test', 'daily-reminders'];
+const FUNCTIONS = ['notify-additions', 'push-test', 'daily-reminders', 'recover-password'];
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 if (!token) {
   console.error('Imposta SUPABASE_ACCESS_TOKEN (token personale Supabase, sbp_...)');
