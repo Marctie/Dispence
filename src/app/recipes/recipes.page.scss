@@ -1,3 +1,6 @@
+// Colonna più larga che nelle altre pagine: su tablet le ricette vanno in griglia
+:host { --content-max: 1040px; }
+
 // ── Filter chips ─────────────────────────────────────────────────────────────
 
 .filter-chips {
@@ -5,12 +8,15 @@
   gap: 8px;
   padding: var(--space-md);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
 
 .chip {
+  position: relative;
   flex-shrink: 0;
+  min-height: 36px;
   padding: 6px 14px;
   border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border);
@@ -22,13 +28,17 @@
   white-space: nowrap;
   transition: all 0.15s ease;
 
+  // area di tocco estesa a 44px (dentro il padding della riga)
+  &::after { content: ''; position: absolute; inset: -5px -2px; }
+
   &--active {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: #fff;
   }
 
-  &--success.chip--active { background: var(--color-success); border-color: var(--color-success); }
+  // --color-success non esiste fra i token: il chip attivo restava senza sfondo (testo bianco su bianco)
+  &--success.chip--active { background: var(--color-primary); border-color: var(--color-primary); }
   &--warning.chip--active { background: var(--color-warning); border-color: var(--color-warning); color: #000; }
   &--accent.chip--active  { background: var(--color-accent);  border-color: var(--color-accent); }
 }
@@ -36,13 +46,20 @@
 // ── Recipe list ───────────────────────────────────────────────────────────────
 
 .recipe-list {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   padding: 0 var(--space-md) var(--space-md);
+
+  // tablet/desktop: 2-3 colonne
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
 }
 
 .recipe-card {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -71,6 +88,7 @@
   font-size: 0.95rem;
   color: var(--color-text);
   margin-bottom: 4px;
+  overflow-wrap: anywhere;
 }
 
 .recipe-meta {
@@ -97,11 +115,13 @@
   border-radius: var(--radius-full);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-
-  &--easy   { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
-  &--medium { background: rgba(var(--ion-color-warning-rgb), 0.15); color: var(--color-warning); }
-  &--hard   { background: rgba(var(--ion-color-danger-rgb), 0.12);  color: var(--ion-color-danger); }
 }
+
+// Il template usa "difficulty--easy|medium|hard" (prima lo stile cercava
+// .recipe-difficulty--easy e il badge restava senza colori)
+.difficulty--easy   { background: var(--color-primary-light); color: var(--color-primary); }
+.difficulty--medium { background: var(--color-warning-light); color: var(--color-warning); }
+.difficulty--hard   { background: var(--color-danger-light);  color: var(--color-danger); }
 
 .recipe-desc {
   font-size: 0.82rem;
@@ -126,7 +146,7 @@
   border: 3px solid currentColor;
   flex-shrink: 0;
 
-  &--success { color: var(--ion-color-success); }
+  &--success { color: var(--color-primary); }
   &--warning { color: var(--color-warning); }
   &--medium  { color: var(--color-text-muted); }
 
@@ -148,12 +168,18 @@
   bottom: 0;
   left: 0;
   right: 0;
+  // su tablet il foglio resta centrato e non a tutta larghezza
+  max-width: 720px;
+  margin-inline: auto;
   background: var(--color-surface);
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-  padding: var(--space-sm) var(--space-md) calc(var(--space-lg) + env(safe-area-inset-bottom));
+  // il foglio sta sopra la tab bar, che già gestisce la safe area in basso
+  padding: var(--space-sm) var(--space-md) var(--space-lg);
   z-index: 1001;
-  max-height: 85vh;
+  // la pagina (sopra la tab bar) fa da riferimento: il foglio non esce mai in alto
+  max-height: min(85vh, calc(100% - 24px));
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: slideUp 0.25s ease;
 }
 
@@ -174,7 +200,10 @@
 
 .detail-emoji { font-size: 2.8rem; line-height: 1; flex-shrink: 0; }
 
+.detail-header > div { min-width: 0; }
+
 .detail-name {
+  overflow-wrap: anywhere;
   font-family: var(--font-display);
   font-size: 1.3rem;
   font-weight: 800;
@@ -195,8 +224,8 @@
   padding: 2px 8px;
   border-radius: var(--radius-full);
 
-  &.score-ring--success { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
-  &.score-ring--warning { background: rgba(var(--ion-color-warning-rgb), 0.15); color: var(--color-warning); }
+  &.score-ring--success { background: var(--color-primary-light); color: var(--color-primary); }
+  &.score-ring--warning { background: var(--color-warning-light); color: var(--color-warning); }
   &.score-ring--medium  { background: var(--color-surface-card); color: var(--color-text-muted); }
 }
 
@@ -224,7 +253,7 @@
 
   ion-icon { font-size: 1rem; }
 
-  &--have    { color: var(--ion-color-success); }
+  &--have    { color: var(--color-primary); }
   &--missing { color: var(--color-text-muted); }
 }
 
@@ -236,7 +265,7 @@
   font-size: 0.82rem;
   font-weight: 500;
 
-  &--have    { background: rgba(var(--ion-color-success-rgb), 0.12); color: var(--ion-color-success); }
+  &--have    { background: var(--color-primary-light); color: var(--color-primary); }
   &--missing { background: var(--color-surface-card); color: var(--color-text-muted); border: 1.5px dashed var(--color-border); }
 }
 

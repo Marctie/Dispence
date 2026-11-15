@@ -1,5 +1,6 @@
 .search-bar-wrap {
-  padding: var(--space-sm) var(--space-sm) 0;
+  // stesso margine laterale di filtri e card
+  padding: var(--space-sm) var(--space-md) 0;
 
   ion-searchbar {
     --background: var(--color-surface-card);
@@ -13,17 +14,22 @@
   }
 }
 
+// Righe di filtri scorrevoli in orizzontale: lo scroll resta dentro la riga.
 .location-filter {
   display: flex;
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-md);
+  padding: 6px var(--space-md);
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
 
 .filter-chip {
+  position: relative;
   flex-shrink: 0;
+  min-height: 36px;
   padding: 6px 16px;
   border-radius: var(--radius-full);
   border: 1.5px solid var(--color-border);
@@ -32,8 +38,16 @@
   font-size: 0.825rem;
   font-weight: 500;
   font-family: var(--font-body);
+  white-space: nowrap;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  // area di tocco estesa a 44px (dentro il padding della riga)
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -5px -2px;
+  }
 
   &--active {
     background: var(--color-primary-light);
@@ -44,9 +58,6 @@
 }
 
 .product-list {
+  // spazio per il pulsante + flottante
   padding: var(--space-sm) var(--space-md) 80px;
-}
-
-ion-fab {
-  margin-bottom: env(safe-area-inset-bottom, 0px);
 }

@@ -3,17 +3,20 @@
   inset: 0;
   z-index: 3000;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--color-surface);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--space-lg) + env(safe-area-inset-top)) var(--space-md)
-           calc(var(--space-lg) + env(safe-area-inset-bottom));
+  padding: calc(var(--space-lg) + env(safe-area-inset-top)) calc(var(--space-md) + env(safe-area-inset-right))
+           calc(var(--space-lg) + env(safe-area-inset-bottom)) calc(var(--space-md) + env(safe-area-inset-left));
 }
 
+// margin: auto centra la scheda ma, se è più alta dello schermo (telefono in
+// orizzontale, tastiera aperta), la lascia scorrere dall'alto invece di tagliarla
+// come faceva align-items: center.
 .auth-card {
   width: 100%;
   max-width: 420px;
+  margin: auto;
   text-align: center;
 }
 
@@ -57,9 +60,10 @@
   border-radius: var(--radius-md);
   margin: 0 0 var(--space-md);
   text-align: left;
+  overflow-wrap: anywhere;
 
-  &--error { background: rgba(var(--ion-color-danger-rgb), 0.12); color: var(--ion-color-danger); }
-  &--info  { background: rgba(var(--ion-color-primary-rgb), 0.12); color: var(--ion-color-primary); }
+  &--error { background: var(--color-danger-light); color: var(--color-danger); }
+  &--info  { background: var(--color-primary-light); color: var(--color-primary); }
 }
 
 .auth-links {
@@ -67,4 +71,11 @@
   flex-direction: column;
   align-items: center;
   margin-top: var(--space-sm);
+
+  // link testuali: area di tocco 44px e testo che va a capo se serve
+  ion-button {
+    min-height: 44px;
+    max-width: 100%;
+    white-space: normal;
+  }
 }

@@ -1,0 +1,24 @@
+// Elenco FAQ come scheda arrotondata, con i colori del tema (chiaro e scuro)
+.faq-list {
+  margin: var(--space-md);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--color-surface-card);
+}
+
+ion-item[slot='header'] {
+  --background: var(--color-surface-card);
+  --color: var(--color-text);
+  --min-height: 52px;
+  font-weight: 500;
+}
+
+.faq-answer {
+  padding: var(--space-sm) var(--space-md) var(--space-md);
+  background: var(--color-surface-card);
+  color: var(--color-text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}

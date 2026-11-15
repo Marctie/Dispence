@@ -8,7 +8,25 @@
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
-@import "@ionic/angular/css/palettes/dark.system.css";
+// Palette scura di Ionic legata alla classe .ion-palette-dark (gestita da ThemeService,
+// anche per la modalità "sistema"): così la scelta "chiaro" vince su un sistema scuro
+// e "scuro" funziona anche con il sistema chiaro.
+@import "@ionic/angular/css/palettes/dark.class.css";
+
+// ─── Layout ──────────────────────────────────────────────────────────────────
+// Su tablet/desktop il contenuto resta in una colonna centrata (--content-max);
+// su telefono il calcolo dà 0 e non cambia nulla. Una pagina può allargare la colonna
+// ridefinendo --content-max sul proprio host (es. Ricette con la griglia).
+// Nota: il calc va ripetuto dove serve (100% si risolve sull'elemento che lo usa).
+
+:root {
+  --content-max: 720px;
+}
+
+ion-content {
+  --padding-start: max(0px, calc((100% - var(--content-max)) / 2));
+  --padding-end: max(0px, calc((100% - var(--content-max)) / 2));
+}
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
@@ -39,8 +57,9 @@ ion-footer {
 
 ion-toolbar {
   --border-color: var(--color-border);
-  --padding-start: var(--space-md);
-  --padding-end: var(--space-md);
+  // allineata alla colonna del contenuto su tablet/desktop
+  --padding-start: max(var(--space-md), calc((100% - var(--content-max)) / 2 + var(--space-md)));
+  --padding-end: max(var(--space-md), calc((100% - var(--content-max)) / 2 + var(--space-md)));
 }
 
 ion-title {
@@ -70,9 +89,11 @@ ion-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-sm);
   padding: var(--space-lg) var(--space-md) var(--space-sm);
 
   h2 {
+    min-width: 0;
     font-family: var(--font-display);
     font-size: 1rem;
     font-weight: 700;
@@ -84,6 +105,10 @@ ion-card {
   ion-button {
     font-size: 0.8rem;
     --color: var(--color-primary);
+    // area di tocco 44px senza aumentare lo spazio dell'intestazione
+    min-height: 44px;
+    margin-block: -10px;
+    flex-shrink: 0;
   }
 }
 

@@ -11,6 +11,7 @@ import { CHANNEL_EXPIRY, CHANNEL_PANTRY, NotificationService } from './services/
 import { DemoDataService } from './services/demo-data.service';
 import { AuthService } from './services/auth.service';
 import { SyncService } from './services/sync.service';
+import { ThemeService } from './services/theme.service';
 
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
 
@@ -36,6 +37,9 @@ export class AppComponent implements OnInit {
     private syncService: SyncService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
+    // Iniettato qui perché applichi subito il tema salvato (classe .ion-palette-dark):
+    // prima veniva creato solo aprendo Impostazioni e il tema forzato non valeva all'avvio.
+    private themeService: ThemeService,
   ) {}
 
   async ngOnInit(): Promise<void> {

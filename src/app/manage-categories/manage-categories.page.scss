@@ -1,6 +1,7 @@
 .cat-emoji {
   width: 36px;
   height: 36px;
+  flex-shrink: 0;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -9,8 +10,15 @@
   margin-inline-end: 12px;
 }
 
+ion-label h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .hint {
   padding: 8px 24px 24px;
-  font-size: 13px;
-  color: var(--ion-color-medium);
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
 }
