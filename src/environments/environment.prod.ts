@@ -6,7 +6,7 @@ export const environment = {
    * La publishable key è pubblica per definizione: la protezione dei dati è data dalle policy RLS.
    */
   supabase: {
-    url: '',
-    publishableKey: '',
+    url: 'https://yzufrpbmraqmacodcsza.supabase.co',
+    publishableKey: 'sb_publishable_eoAUzJxyyIc3SsaZ_A5etA_0hV2tqVb',
   },
 };

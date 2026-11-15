@@ -2,6 +2,8 @@
 
 Riguarda solo la versione web (GitHub Pages / iPhone). L'app Android pubblicata su Play Store **non cambia**: niente login, dati solo sul telefono.
 
+> **Stato (2026-11-15): configurato e attivo.** Progetto Supabase `yzufrpbmraqmacodcsza` (UE, Irlanda), schema applicato, conferma email disattivata (accesso immediato), nessun servizio SMTP ancora collegato: "Password dimenticata" non invia email finché non si configura il passo 5. I passaggi qui sotto servono solo per rifare la configurazione da zero.
+
 Finché `supabase.url` e `supabase.publishableKey` in `src/environments/environment.prod.ts` restano vuoti, la web app funziona come prima, senza login.
 
 ## Come funziona

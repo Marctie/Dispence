@@ -46,9 +46,12 @@ App Ionic/Angular + Capacitor per la gestione della dispensa domestica. Ribattez
 ## Versione web / iPhone (2026-11-15)
 - [x] PWA installabile su iPhone, notifiche riepilogative + badge, workflow GitHub Pages
 - [x] Cronologia ripulita dai dati personali, solo branch `main` sul remote
-- [ ] Utente: rendere pubblico il repo, poi Settings → Pages → Source: GitHub Actions, poi Actions → Run workflow
+- [x] Repo pubblico, GitHub Pages attivo: https://marctie.github.io/Dispence/
 - [x] Login/account per la web app (Supabase), codice pronto e testato con un finto Supabase
-- [ ] Utente: creare il progetto Supabase seguendo `docs/SETUP_LOGIN_SUPABASE.md` e inserire URL e publishable key
+- [x] Supabase configurato (progetto `yzufrpbmraqmacodcsza`, UE): schema + RLS, accesso immediato senza conferma email, chiavi pubbliche nell'app
+- [x] Test reali: 16/16 sicurezza RLS (un utente non legge né modifica i dati di un altro; un visitatore senza login non accede a nulla), 17/17 flusso UI completo (login al primo avvio, registrazione, migrazione dati, esci, rientro, password errata)
+- [ ] Utente: revocare il token di accesso Supabase usato per la configurazione
+- [ ] SMTP (es. Brevo) per far funzionare "Password dimenticata"
 - [ ] Privacy policy: aggiungere una sezione per la versione web con account, prima di aprirla a persone esterne
 - [ ] Opzionale: notifiche push vere ad app chiusa (richiede un piccolo backend, es. Cloudflare Worker + Web Push)
 
