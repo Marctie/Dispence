@@ -23,7 +23,7 @@ export class BackupService {
     private barcodeCache: BarcodeCacheService,
   ) {}
 
-  private collectPayload(): BackupPayload {
+  collectPayload(): BackupPayload {
     return {
       products: this.productService.getAll(),
       customCategories: this.categoryService.getCustom(),
@@ -117,11 +117,16 @@ export class BackupService {
   }
 
   private async applyBackup(backup: BackupFile): Promise<void> {
-    this.productService.replaceAll(backup.data.products);
-    this.categoryService.replaceCustom(backup.data.customCategories);
-    this.shoppingService.replaceAll(backup.data.shoppingItems);
-    this.preferencesService.update(backup.data.preferences);
-    this.barcodeCache.replaceAll(backup.data.barcodeCache);
-    this.productService.replacePurchaseHistory(backup.data.purchaseHistory ?? {});
+    this.applyPayload(backup.data);
+  }
+
+  /** Sostituisce l'intero stato locale con quello indicato (usato anche dalla sincronizzazione). */
+  applyPayload(data: BackupPayload): void {
+    this.productService.replaceAll(data.products ?? []);
+    this.categoryService.replaceCustom(data.customCategories ?? []);
+    this.shoppingService.replaceAll(data.shoppingItems ?? []);
+    if (data.preferences) this.preferencesService.update(data.preferences);
+    this.barcodeCache.replaceAll(data.barcodeCache ?? {});
+    this.productService.replacePurchaseHistory(data.purchaseHistory ?? {});
   }
 }

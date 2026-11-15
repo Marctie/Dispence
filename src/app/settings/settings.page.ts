@@ -7,6 +7,8 @@ import { StatsService, CategoryStat, LocationStat, ExpiryBucket } from '../servi
 import { BackupService } from '../services/backup.service';
 import { DemoDataService } from '../services/demo-data.service';
 import { NotificationService } from '../services/notification.service';
+import { AuthService } from '../services/auth.service';
+import { SyncService, SyncStatus } from '../services/sync.service';
 
 @Component({
   selector: 'app-settings',
@@ -22,6 +24,8 @@ export class SettingsPage implements OnInit, OnDestroy {
   notificationsEnabled = true;
   autoBackupDate: string | null = null;
   hasDemoData = false;
+  accountEmail: string | null = null;
+  syncStatus: SyncStatus = 'idle';
 
   // stats
   totalProducts = 0;
@@ -35,6 +39,7 @@ export class SettingsPage implements OnInit, OnDestroy {
   expiryBuckets: ExpiryBucket[] = [];
 
   private sub!: Subscription;
+  private syncSub?: Subscription;
 
   constructor(
     private themeService: ThemeService,
@@ -43,6 +48,8 @@ export class SettingsPage implements OnInit, OnDestroy {
     private backupService: BackupService,
     private demoDataService: DemoDataService,
     private notificationService: NotificationService,
+    private authService: AuthService,
+    private syncService: SyncService,
     private alertCtrl: AlertController,
     private toastCtrl: ToastController,
   ) {}
@@ -59,10 +66,66 @@ export class SettingsPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.loadStats();
     this.loadBackupState();
+    if (this.authService.enabled) {
+      this.accountEmail = this.authService.user?.email ?? null;
+      this.syncSub = this.syncService.status$.subscribe(s => (this.syncStatus = s));
+    }
   }
 
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
+    this.syncSub?.unsubscribe();
+  }
+
+  get syncLabel(): string {
+    switch (this.syncStatus) {
+      case 'syncing': return 'Sincronizzazione in corso…';
+      case 'synced': return 'Dati salvati nel tuo account';
+      case 'offline': return 'Offline: le modifiche verranno salvate appena torni online';
+      case 'error': return 'Salvataggio online non riuscito, riproverò';
+      default: return 'In attesa di sincronizzazione';
+    }
+  }
+
+  async logout(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Uscire dall’account?',
+      message: 'I dati restano salvati nel tuo account e verranno rimossi da questo dispositivo.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Esci',
+          role: 'destructive',
+          handler: async () => {
+            await this.syncService.push();
+            await this.authService.signOut();
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async deleteAccount(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Eliminare l’account?',
+      message: 'Account e dispensa online verranno cancellati definitivamente. L’operazione non si può annullare: esporta prima un backup se vuoi conservare i dati.',
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Elimina',
+          role: 'destructive',
+          handler: async () => {
+            try {
+              await this.authService.deleteAccount();
+            } catch (e) {
+              this.showToast(e instanceof Error ? e.message : 'Eliminazione non riuscita');
+            }
+          },
+        },
+      ],
+    });
+    await alert.present();
   }
 
   onThemeChange(event: CustomEvent): void {

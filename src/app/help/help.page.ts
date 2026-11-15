@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { AuthService } from '../services/auth.service';
 
 interface FaqItem {
   question: string;
@@ -42,4 +43,14 @@ export class HelpPage {
       answer: 'Se attivi la soglia di scorta minima su un prodotto, quando la quantità scende sotto quella soglia l\'app lo suggerisce nella Lista della spesa. Puoi accettare il suggerimento con un tap oppure aggiungere voci manualmente in qualsiasi momento.',
     },
   ];
+
+  constructor(auth: AuthService) {
+    if (auth.enabled) {
+      // Versione web con account: i dati sono anche salvati online, nello spazio privato dell'utente.
+      this.faqs[0] = {
+        question: 'Dove vengono salvati i miei dati?',
+        answer: 'Sul tuo dispositivo e, in copia, nel tuo account: così li ritrovi anche cambiando telefono. La dispensa online è privata: il database permette di leggerla e modificarla solo a chi ha effettuato l’accesso con il tuo account. Se esci dall’account i dati vengono rimossi da questo dispositivo, e dalle Impostazioni puoi eliminare definitivamente account e dati online.',
+      };
+    }
+  }
 }
