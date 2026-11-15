@@ -64,9 +64,9 @@ Su iPhone non serve l'App Store: si usa la **web app**, che una volta aggiunta a
 ### Attivare le notifiche
 Requisiti: **iOS 16.4 o successivo** (Impostazioni → Generali → Info → Versione iOS) e app aperta **dall'icona** della schermata Home.
 
-1. Apri l'app dall'icona e accedi.
-2. Vai in **Impostazioni → Notifiche** e attiva l'interruttore **Notifiche** (se è già attivo, spegnilo e riaccendilo).
-3. iPhone chiede *"Dispensina vorrebbe inviarti notifiche"* → **Consenti**.
+1. Apri l'app dall'icona e accedi. Dopo la presentazione iniziale l'app chiede **"Vuoi ricevere gli avvisi?"** → tocca **Attiva**.
+2. iPhone chiede *"Dispensina vorrebbe inviarti notifiche"* → **Consenti**.
+3. Se avevi risposto *Non ora*: **Impostazioni → Notifiche** → accendi l'interruttore **Notifiche** (è acceso solo quando il permesso c'è davvero).
 4. Tocca **"Invia una notifica di prova"**: entro qualche secondo deve arrivare *"Le notifiche funzionano 👍"*. Sotto la voce compare *"Arrivano anche ad app chiusa"*.
 5. Scegli orario e tipi di avviso (vedi [sezione 5](#5-notifiche-come-funzionano)).
 
@@ -85,7 +85,7 @@ Se avevi risposto *Non consentire*: Impostazioni di iPhone → Notifiche → Dis
 
 **Installazione.** Dal Play Store, oppure installando l'APK ricevuto (Android chiede di consentire l'installazione da quella app/origine: accetta). Un APK nuovo si installa sopra quello vecchio senza perdere nulla.
 
-**Notifiche.** Al primo avvio Android chiede il permesso per le notifiche: tocca **Consenti**. Gli avvisi di scadenza e scorte basse sono **pianificati direttamente sul telefono** per i 30 giorni successivi e arrivano anche ad app chiusa e senza internet; vengono ripianificati ogni volta che apri l'app o modifichi la dispensa. Nelle impostazioni di Android trovi due canali separati, *Avvisi scadenza* e *Dispensa condivisa*, che puoi regolare (suono, vibrazione) o disattivare singolarmente.
+**Notifiche.** Dopo il primo accesso l'app chiede **"Vuoi ricevere gli avvisi?"** → **Attiva** → Android chiede il permesso → **Consenti**. (Se rispondi *Non ora*, puoi attivarle in qualsiasi momento da *Impostazioni → Notifiche*; se il permesso è stato negato, l'app spiega come riattivarlo dalle impostazioni di Android.) Gli avvisi di scadenza e scorte basse sono **pianificati direttamente sul telefono** per i 30 giorni successivi e arrivano anche ad app chiusa e senza internet; vengono ripianificati ogni volta che apri l'app o modifichi la dispensa. Nelle impostazioni di Android trovi due canali separati, *Avvisi scadenza* e *Dispensa condivisa*, che puoi regolare (suono, vibrazione) o disattivare singolarmente.
 
 **Prodotti aggiunti da altri** (dispensa condivisa): su Android l'avviso arriva quando l'app è aperta o in secondo piano; con l'app completamente chiusa vedi le novità alla riapertura. (Per riceverli anche ad app chiusa servirebbe Firebase Cloud Messaging, escluso per scelta.)
 
@@ -183,6 +183,10 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 **Recupero password** (`supabase/recovery.sql` + funzione `recover-password`): codice personale di 16 caratteri salvato solo come hash bcrypt (`recovery_codes`, nessun accesso dai client), verifica e limite di 5 tentativi falliti/ora per email (`recovery_attempts`) in funzioni `security definer` eseguibili solo dal server; la funzione imposta la nuova password con l'API admin e sostituisce il codice usato.
 
 **Funzioni server** (`supabase/functions`, Deno): `recover-password`, `notify-additions` (push agli altri membri, rispettando le loro preferenze), `push-test`, `daily-reminders` (chiamata da pg_cron ogni 15 minuti con un segreto nel Vault; invia una volta al giorno all'orario dell'utente nel suo fuso orario). Segreti delle funzioni: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET` (copia locale in `keystore-privato/supabase-push-secrets.json`, mai su git).
+
+**Telemetria e bot** (`TelemetryService`, `global-error-handler.ts`, `supabase/telemetry.sql`): l'app registra interazioni (senza contenuti: niente nomi prodotto) e **tutti gli errori** (ErrorHandler Angular, `window.onerror`, promesse non gestite, `console.error`, errori di sincronizzazione) in una coda locale (`telemetry_queue`) inviata alla tabella `app_events` (i client possono solo inserire; il nome utente lo mette il server). Il bot Telegram **Dispence-Track** (`Bot Telegram\Dispence-Track`, avviato dal Bot Control Center) legge la tabella ogni 15 s e manda i messaggi all'amministratore; se è spento gli eventi restano in coda e vengono consegnati alla riaccensione. Comandi: `/stato`, `/oggi`, `/utenti`, `/errori`, `/errore N`, `/risolto N`, `/ultimi N`, `/notifiche on|off`, `/aiuto`. Dettagli nel README del bot.
+
+**Notifiche Android (attenzione)**: con `@capacitor/local-notifications` 8 ogni notifica va pianificata con `isExactNotification: false`, altrimenti senza il permesso "Sveglie e promemoria" il plugin apre le impostazioni di sistema a ogni pianificazione e la chiamata resta in attesa.
 
 **Test**: `npx ng test --watch=false --browsers=ChromeHeadless` — unione dati, pianificatore notifiche, sincronizzazione condivisa con un finto Supabase (concorrenza, cancellazioni, lista spesa, isolamento tra account), backup, categorie.
 

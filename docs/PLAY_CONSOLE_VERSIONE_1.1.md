@@ -51,7 +51,7 @@ Play richiede sia l'eliminazione dall'app sia un link web.
 
 ## 5. Nuova release
 
-- File: `android/app/build/outputs/bundle/release/app-release.aab` (versionCode 2, versionName 1.1), generato con `gradlew bundleRelease` usando il JDK 21 portable in `..\..\jdk21\jdk-21.0.12.1+1`.
+- File: `android/app/build/outputs/bundle/release/app-release.aab` (**versionCode 4**, versionName 1.1). Le versioni 2 e 3 non vanno usate: la 2 conteneva un bug delle notifiche Android, la 3 chiedeva il permesso solo dall'interruttore. Se hai già caricato la 2, eliminala dalla release e carica questa., generato con `gradlew bundleRelease` usando il JDK 21 portable in `..\..\jdk21\jdk-21.0.12.1+1`.
 - Note di rilascio (it-IT):
 
 ```
