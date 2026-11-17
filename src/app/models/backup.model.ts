@@ -19,6 +19,8 @@ export interface BackupPayload {
   usageHistory?: UsageEntry[];
   /** Ricette create dall'utente (assenti nei backup creati prima della 1.2). */
   customRecipes?: Recipe[];
+  /** Ricette incluse rimosse dall'utente: id → data (dalla 1.3). */
+  hiddenRecipes?: Record<string, string>;
 }
 
 export interface BackupFile {

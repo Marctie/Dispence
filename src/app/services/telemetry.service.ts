@@ -508,7 +508,7 @@ export class TelemetryService {
       .replace(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g, '[token]')
       .replace(/sb_(publishable|secret)_[\w-]+/g, '[chiave]')
       .replace(/(https?:\/\/[^\s?#"']+)[?#][^\s"']*/g, '$1?…')
-      .replace(/(invito|code|token|password)=([^&\s"']+)/gi, '$1=…');
+      .replace(/(invito|ricetta|code|token|password)=([^&\s"']+)/gi, '$1=…');
   }
 
   static describeError(err: unknown): { message: string; stack: string } {

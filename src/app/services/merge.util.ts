@@ -11,6 +11,7 @@ export const EMPTY_SHARED: SharedData = {
   purchaseHistory: {},
   usageHistory: [],
   customRecipes: [],
+  hiddenRecipes: {},
 };
 
 /** JSON con chiavi ordinate: due oggetti uguali producono sempre la stessa stringa. */
@@ -34,6 +35,7 @@ export function normalize(data: Partial<SharedData> | null | undefined): SharedD
     purchaseHistory: data?.purchaseHistory ?? {},
     usageHistory: data?.usageHistory ?? [],
     customRecipes: data?.customRecipes ?? [],
+    hiddenRecipes: data?.hiddenRecipes ?? {},
   };
 }
 
@@ -117,6 +119,7 @@ export function mergeShared(base: SharedData | null, localIn: SharedData, remote
         byKey(remote.purchaseHistory), (l, r) => (l.count >= r.count ? l : r))),
       usageHistory: sortUsage(unionList(local.usageHistory!, remote.usageHistory!)),
       customRecipes: unionList(local.customRecipes!, remote.customRecipes!),
+      hiddenRecipes: { ...local.hiddenRecipes, ...remote.hiddenRecipes },
     };
   }
   const b = normalize(base);
@@ -129,6 +132,7 @@ export function mergeShared(base: SharedData | null, localIn: SharedData, remote
       byKey(remote.purchaseHistory), (l, r) => (l.count >= r.count ? l : r))),
     usageHistory: sortUsage(mergeList(b.usageHistory!, local.usageHistory!, remote.usageHistory!)),
     customRecipes: mergeList(b.customRecipes!, local.customRecipes!, remote.customRecipes!),
+    hiddenRecipes: toRecord(merge3Map(byKey(b.hiddenRecipes!), byKey(local.hiddenRecipes!), byKey(remote.hiddenRecipes!))),
   };
 }
 

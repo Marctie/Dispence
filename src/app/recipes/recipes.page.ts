@@ -1,5 +1,8 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AlertController, ModalController } from '@ionic/angular';
+import { AlertController, ModalController, ToastController } from '@ionic/angular';
+import { environment } from '../../environments/environment';
+import { buildShareMessage } from '../shared/recipe-share.util';
+import { shareText } from '../shared/share.util';
 import { Subscription } from 'rxjs';
 import { RecipeService, RecipeWithScore } from '../services/recipe.service';
 import { DIFFICULTY_LABELS, Recipe } from '../models/recipe.model';
@@ -26,6 +29,7 @@ export class RecipesPage implements OnInit, OnDestroy {
     private recipeService: RecipeService,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
   ) {}
 
   ngOnInit(): void {
@@ -39,6 +43,11 @@ export class RecipesPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     this._all = this.recipeService.getSorted();
+    const pending = this.recipeService.pendingImport;
+    if (pending) {
+      this.recipeService.pendingImport = null;
+      void this.confirmImport(pending);
+    }
   }
 
   get filtered(): RecipeWithScore[] {
@@ -117,5 +126,91 @@ export class RecipesPage implements OnInit, OnDestroy {
       ],
     });
     await alert.present();
+  }
+
+  get hiddenCount(): number { return this.recipeService.hiddenCount; }
+
+  /** Rimuove una ricetta inclusa nell'app (si può ripristinare). */
+  async confirmHide(recipe: Recipe): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Rimuovi ricetta',
+      message: `Vuoi togliere "${recipe.name}" dalle ricette? Potrai ripristinarla in fondo alla lista.`,
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Rimuovi', role: 'destructive', handler: () => {
+            this.recipeService.hideBuiltin(recipe.id);
+            this.closeDetail();
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  async restoreHidden(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Ripristina ricette',
+      message: `Rimettere le ${this.hiddenCount} ricette che avevi rimosso?`,
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        { text: 'Ripristina', handler: () => this.recipeService.restoreHidden() },
+      ],
+    });
+    await alert.present();
+  }
+
+  async share(recipe: Recipe): Promise<void> {
+    const res = await shareText(recipe.name, buildShareMessage(recipe, environment.webUrl));
+    if (res === 'copied') await this.toast('Ricetta copiata: incollala in un messaggio');
+  }
+
+  /** Importa una ricetta da un messaggio o link incollato. */
+  async openImport(): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Importa ricetta',
+      message: 'Incolla qui il messaggio o il link che ti hanno mandato.',
+      inputs: [{ name: 'text', type: 'textarea', placeholder: 'Incolla il messaggio...', attributes: { rows: 5 } }],
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        {
+          text: 'Importa', handler: v => {
+            const data = this.recipeService.parseShared(String(v?.text ?? ''));
+            if (!data) {
+              void this.toast('Nel testo non c\'è una ricetta di Dispensina: incolla il messaggio completo');
+              return false;
+            }
+            void this.confirmImport(data);
+            return true;
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async confirmImport(data: Omit<Recipe, 'id' | 'custom' | 'createdAt'>): Promise<void> {
+    const alert = await this.alertCtrl.create({
+      header: 'Ricetta ricevuta',
+      message: `${data.emoji ?? ''} ${data.name} · ${data.ingredients.length} ingredienti` +
+        (data.steps?.length ? `, ${data.steps.length} passaggi` : '') + '. Vuoi salvarla tra le tue ricette?',
+      buttons: [
+        { text: 'No', role: 'cancel' },
+        {
+          text: 'Salva', handler: () => {
+            const created = this.recipeService.importShared(data);
+            this.filter = 'mine';
+            this.selectedRecipe = this.recipeService.getWithScores().find(r => r.id === created.id) ?? null;
+            void this.toast('Ricetta salvata in "Le mie"');
+          },
+        },
+      ],
+    });
+    await alert.present();
+  }
+
+  private async toast(message: string): Promise<void> {
+    const t = await this.toastCtrl.create({ message, duration: 2500, position: 'bottom' });
+    await t.present();
   }
 }

@@ -35,6 +35,7 @@ export class BackupService {
       purchaseHistory: this.productService.getPurchaseHistory(),
       usageHistory: this.productService.getUsageHistory(),
       customRecipes: this.recipeService.getCustom(),
+      hiddenRecipes: this.recipeService.getHidden(),
     };
   }
 
@@ -135,5 +136,6 @@ export class BackupService {
     // Assenti nei backup precedenti alla 1.2: in quel caso si tengono quelli attuali.
     if (data.usageHistory) this.productService.replaceUsageHistory(data.usageHistory);
     if (data.customRecipes) this.recipeService.replaceCustom(data.customRecipes);
+    if (data.hiddenRecipes) this.recipeService.replaceHidden(data.hiddenRecipes);
   }
 }

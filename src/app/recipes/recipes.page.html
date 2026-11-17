@@ -6,6 +6,9 @@
       </div>
     </ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="openImport()" aria-label="Importa una ricetta ricevuta">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
       <ion-button (click)="openForm()" aria-label="Aggiungi una tua ricetta">
         <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
       </ion-button>
@@ -97,6 +100,13 @@
     </div>
   }
 
+  @if (hiddenCount > 0 && (filter === 'all' || filter === 'mine')) {
+    <div class="hidden-note">
+      {{ hiddenCount }} {{ hiddenCount === 1 ? 'ricetta rimossa' : 'ricette rimosse' }} ·
+      <button type="button" class="link-btn" (click)="restoreHidden()">Ripristina</button>
+    </div>
+  }
+
   <app-footer></app-footer>
 
 </ion-content>
@@ -171,16 +181,23 @@
       </div>
     }
 
-    @if (selectedRecipe.custom) {
-      <div class="custom-actions">
+    <div class="custom-actions">
+      <ion-button fill="outline" (click)="share(selectedRecipe)">
+        <ion-icon slot="start" name="share-social-outline"></ion-icon> Condividi
+      </ion-button>
+      @if (selectedRecipe.custom) {
         <ion-button fill="outline" (click)="openForm(selectedRecipe)">
           <ion-icon slot="start" name="create-outline"></ion-icon> Modifica
         </ion-button>
-        <ion-button fill="outline" color="danger" (click)="confirmDelete(selectedRecipe)">
-          <ion-icon slot="start" name="trash-outline"></ion-icon> Elimina
+        <ion-button fill="outline" color="danger" (click)="confirmDelete(selectedRecipe)" aria-label="Elimina ricetta">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
         </ion-button>
-      </div>
-    }
+      } @else {
+        <ion-button fill="outline" color="danger" (click)="confirmHide(selectedRecipe)">
+          <ion-icon slot="start" name="eye-off-outline"></ion-icon> Rimuovi
+        </ion-button>
+      }
+    </div>
 
     <ion-button expand="block" fill="solid" color="primary" (click)="closeDetail()">
       Chiudi

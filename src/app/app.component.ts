@@ -14,6 +14,8 @@ import { SyncService } from './services/sync.service';
 import { shareText } from './shared/share.util';
 import { ThemeService } from './services/theme.service';
 import { TelemetryService } from './services/telemetry.service';
+import { RecipeService } from './services/recipe.service';
+import { Router } from '@angular/router';
 
 const PENDING_INVITE_KEY = 'dispensa_pending_invite';
 /** Invito a creare il codice di recupero già mostrato (per utente). Prefisso diverso da dispensa_: sopravvive al logout. */
@@ -33,6 +35,8 @@ export class AppComponent implements OnInit {
   showAuth = false;
   passwordRecovery = false;
   private telemetry = inject(TelemetryService);
+  private recipeService = inject(RecipeService);
+  private router = inject(Router);
 
   constructor(
     private preferencesService: PreferencesService,
@@ -56,6 +60,7 @@ export class AppComponent implements OnInit {
       ? new Promise<void>(resolve => (this.resolveOnboarding = resolve))
       : Promise.resolve();
     this.capturePendingInvite();
+    this.capturePendingRecipe();
 
     try {
       await this.setupNotificationChannels();
@@ -174,6 +179,18 @@ export class AppComponent implements OnInit {
         sessionStorage.setItem(PENDING_INVITE_KEY, code);
         history.replaceState(null, '', location.pathname);
       }
+    } catch { /* non disponibile */ }
+  }
+
+  /** Link di una ricetta condivisa (…/Dispence/#ricetta=CODICE): la propone nella pagina Ricette. */
+  private capturePendingRecipe(): void {
+    try {
+      if (!location.hash.includes('ricetta=')) return;
+      const data = this.recipeService.parseShared(location.hash);
+      history.replaceState(null, '', location.pathname + location.search);
+      if (!data) return;
+      this.recipeService.pendingImport = data;
+      void this.router.navigateByUrl('/tabs/recipes');
     } catch { /* non disponibile */ }
   }
 
