@@ -84,3 +84,8 @@
   - **Ricette incluse rimovibili**: nel dettaglio "Rimuovi" (con conferma); in fondo alla lista "N ricette rimosse · Ripristina". Le rimozioni sono nel backup e nella dispensa condivisa.
   - **Condivisione ricette**: "Condividi" su ogni ricetta manda un messaggio leggibile (ingredienti e preparazione) con un link `…/Dispence/#ricetta=CODICE` e il codice `DISPENSINA-RICETTA:…`. Chi lo riceve apre il link (versione web/iPhone) oppure in Ricette → Importa (icona ↓) incolla il messaggio (funziona anche su Android); dopo la conferma la ricetta finisce in "Le mie". Il codice sta nel frammento `#`, quindi non arriva al server; la telemetria lo oscura e registra solo l'azione. I dati importati vengono validati e limitati.
   - Verifiche: 67/67 test (3 nuovi sulla codifica delle ricette), build web e Android ok, AAB e APK firmati e verificati. Da caricare su Play Console questo AAB (7 / 1.3.0) al posto della 1.2.1.
+- **Fine sessione del 17/11.** Pronta la 1.3.0 (versionCode 7): AAB e APK firmati, codice su GitHub. Fornita la guida per caricarla nel test chiuso Alpha di Play Console: il caricamento e l'invio alla revisione li fa l'utente. Punti aperti per la prossima sessione:
+  - verificare l'esito della revisione Play della 1.3.0;
+  - rendere la sincronizzazione sicura con le versioni vecchie: una versione precedente che salva la dispensa condivisa potrebbe cancellare ricette personali, ricette rimosse e storico, quindi conviene aggiornare tutti i dispositivi;
+  - facoltativi: scrivere la preparazione delle 45 ricette incluse che ne sono ancora senza, mostrare i prodotti buttati nelle statistiche sullo spreco, voce sulle novità nella pagina Aiuto;
+  - ancora aperti dalla sessione del 15/11: Avvia su @dispenceaibot e revoca del token Supabase.
