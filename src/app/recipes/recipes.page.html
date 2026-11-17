@@ -5,6 +5,11 @@
         <span>Ricette</span>
       </div>
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openForm()" aria-label="Aggiungi una tua ricetta">
+        <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
   <ion-toolbar>
     <ion-searchbar
@@ -32,6 +37,9 @@
     <button class="chip chip--accent" [class.chip--active]="filter === 'antiwaste'" (click)="filter = 'antiwaste'">
       ♻️ Anti-spreco ({{ antiwasteCount }})
     </button>
+    <button class="chip" [class.chip--active]="filter === 'mine'" (click)="filter = 'mine'">
+      ✍️ Le mie ({{ mineCount }})
+    </button>
   </div>
 
   <!-- Recipe list -->
@@ -41,7 +49,10 @@
         <div class="recipe-card" (click)="openDetail(r)" role="button" [attr.aria-label]="r.name">
           <div class="recipe-emoji">{{ r.emoji }}</div>
           <div class="recipe-info">
-            <div class="recipe-name">{{ r.name }}</div>
+            <div class="recipe-name">
+              {{ r.name }}
+              @if (r.custom) { <span class="mine-badge">La mia</span> }
+            </div>
             <div class="recipe-meta">
               <span class="recipe-time">
                 <ion-icon name="time-outline" aria-hidden="true"></ion-icon>
@@ -64,7 +75,13 @@
   } @else {
     <div class="empty-state">
       <span class="empty-icon">🍳</span>
-      @if (filter === 'available') {
+      @if (filter === 'mine' && !search) {
+        <p class="empty-title">Nessuna ricetta tua, per ora</p>
+        <p class="empty-text">Aggiungi le tue ricette con ingredienti e preparazione: l'app ti dirà quando hai tutto in dispensa.</p>
+        <ion-button (click)="openForm()">
+          <ion-icon slot="start" name="add"></ion-icon> Nuova ricetta
+        </ion-button>
+      } @else if (filter === 'available') {
         <p class="empty-title">Nessuna ricetta disponibile</p>
         <p class="empty-text">Aggiungi più prodotti in dispensa per sbloccare ricette complete</p>
       } @else if (filter === 'antiwaste') {
@@ -101,6 +118,12 @@
           <span class="recipe-difficulty difficulty--{{ selectedRecipe.difficulty }}">
             {{ difficultyLabels[selectedRecipe.difficulty] }}
           </span>
+          @if (selectedRecipe.servings) {
+            <span class="recipe-time">
+              <ion-icon name="people-outline" aria-hidden="true"></ion-icon>
+              {{ selectedRecipe.servings }} {{ selectedRecipe.servings === 1 ? 'porzione' : 'porzioni' }}
+            </span>
+          }
           <span class="score-inline score-ring--{{ scoreColor(selectedRecipe) }}">
             {{ scorePercent(selectedRecipe) }}% ingredienti
           </span>
@@ -133,6 +156,31 @@
         </div>
       }
     </div>
+
+    @if (selectedRecipe.steps?.length) {
+      <div class="steps-section">
+        <div class="ingredient-group-title">
+          <ion-icon name="list-outline" aria-hidden="true"></ion-icon>
+          Preparazione
+        </div>
+        <ol class="steps-list">
+          @for (st of selectedRecipe.steps; track $index) {
+            <li>{{ st }}</li>
+          }
+        </ol>
+      </div>
+    }
+
+    @if (selectedRecipe.custom) {
+      <div class="custom-actions">
+        <ion-button fill="outline" (click)="openForm(selectedRecipe)">
+          <ion-icon slot="start" name="create-outline"></ion-icon> Modifica
+        </ion-button>
+        <ion-button fill="outline" color="danger" (click)="confirmDelete(selectedRecipe)">
+          <ion-icon slot="start" name="trash-outline"></ion-icon> Elimina
+        </ion-button>
+      </div>
+    }
 
     <ion-button expand="block" fill="solid" color="primary" (click)="closeDetail()">
       Chiudi

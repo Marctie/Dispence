@@ -13,6 +13,8 @@ export class ProductCardComponent {
   @Input() showActions = true;
   @Output() editClick = new EventEmitter<void>();
   @Output() deleteClick = new EventEmitter<void>();
+  /** "Usa": toglie una quantità dalla dispensa. Il pulsante appare solo se qualcuno ascolta. */
+  @Output() useClick = new EventEmitter<void>();
 
   constructor(private categoryService: CategoryService) {}
 

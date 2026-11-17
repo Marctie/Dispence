@@ -9,6 +9,7 @@ import { CategoryService } from './category.service';
 import { ShoppingService } from './shopping.service';
 import { PreferencesService } from './preferences.service';
 import { BarcodeCacheService } from './barcode-cache.service';
+import { RecipeService } from './recipe.service';
 
 const AUTO_BACKUP_KEY = 'dispensa_auto_backup';
 
@@ -21,6 +22,7 @@ export class BackupService {
     private shoppingService: ShoppingService,
     private preferencesService: PreferencesService,
     private barcodeCache: BarcodeCacheService,
+    private recipeService: RecipeService,
   ) {}
 
   collectPayload(): BackupPayload {
@@ -31,6 +33,8 @@ export class BackupService {
       preferences: this.preferencesService.get(),
       barcodeCache: this.barcodeCache.getAll(),
       purchaseHistory: this.productService.getPurchaseHistory(),
+      usageHistory: this.productService.getUsageHistory(),
+      customRecipes: this.recipeService.getCustom(),
     };
   }
 
@@ -128,5 +132,8 @@ export class BackupService {
     if (data.preferences) this.preferencesService.update(data.preferences);
     this.barcodeCache.replaceAll(data.barcodeCache ?? {});
     this.productService.replacePurchaseHistory(data.purchaseHistory ?? {});
+    // Assenti nei backup precedenti alla 1.2: in quel caso si tengono quelli attuali.
+    if (data.usageHistory) this.productService.replaceUsageHistory(data.usageHistory);
+    if (data.customRecipes) this.recipeService.replaceCustom(data.customRecipes);
   }
 }

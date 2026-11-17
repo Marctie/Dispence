@@ -24,12 +24,22 @@
   <div class="card-right">
     <app-expiry-badge [expiryDate]="product.expiryDate"></app-expiry-badge>
     @if (showActions) {
+      <div class="card-actions">
+      @if (useClick.observed) {
+        <button
+          class="delete-btn use-btn"
+          (click)="$event.stopPropagation(); useClick.emit()"
+          [attr.aria-label]="'Usa o togli ' + product.name">
+          <ion-icon name="remove-circle-outline" aria-hidden="true"></ion-icon>
+        </button>
+      }
       <button
         class="delete-btn"
         (click)="$event.stopPropagation(); deleteClick.emit()"
         [attr.aria-label]="'Elimina ' + product.name">
         <ion-icon name="trash-outline" aria-hidden="true"></ion-icon>
       </button>
+      </div>
     }
   </div>
 

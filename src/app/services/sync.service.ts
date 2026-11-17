@@ -23,6 +23,8 @@ const SHARED_KEYS = new Set([
   'dispensa_custom_categories',
   'dispensa_shopping',
   'dispensa_barcode_cache',
+  'dispensa_usage_history',
+  'dispensa_custom_recipes',
 ]);
 
 export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'offline' | 'error';

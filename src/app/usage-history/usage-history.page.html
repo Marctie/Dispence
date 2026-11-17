@@ -1,0 +1,94 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/inventory"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Storico usati</ion-title>
+    @if (entries.length > 0) {
+      <ion-buttons slot="end">
+        <ion-button (click)="clearAll()" aria-label="Svuota storico">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    }
+  </ion-toolbar>
+  <ion-toolbar>
+    <ion-searchbar [(ngModel)]="search" placeholder="Cerca nello storico..." [debounce]="200"></ion-searchbar>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <div class="chips">
+    <button type="button" class="chip" [class.chip--active]="period === 7" (click)="period = 7">7 giorni</button>
+    <button type="button" class="chip" [class.chip--active]="period === 30" (click)="period = 30">30 giorni</button>
+    <button type="button" class="chip" [class.chip--active]="period === 0" (click)="period = 0">Sempre</button>
+  </div>
+
+  <div class="summary">
+    <button type="button" class="stat" [class.stat--active]="reason === 'all'" (click)="reason = 'all'">
+      <span class="stat-num">{{ usedCount + wastedCount }}</span><span class="stat-lbl">Uscite</span>
+    </button>
+    <button type="button" class="stat stat--used" [class.stat--active]="reason === 'used'" (click)="reason = 'used'">
+      <span class="stat-num">{{ usedCount }}</span><span class="stat-lbl">✅ Usati</span>
+    </button>
+    <button type="button" class="stat stat--wasted" [class.stat--active]="reason === 'wasted'" (click)="reason = 'wasted'">
+      <span class="stat-num">{{ wastedCount }}</span><span class="stat-lbl">🗑️ Buttati</span>
+    </button>
+  </div>
+
+  @if (topUsed.length > 0 && reason !== 'wasted' && !search) {
+    <div class="top">
+      <p class="section-label">I più usati</p>
+      <div class="top-list">
+        @for (t of topUsed; track t.name) {
+          <span class="top-chip">{{ t.name }} <b>×{{ t.count }}</b></span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (groups.length > 0) {
+    @for (g of groups; track g.label) {
+      <p class="section-label day">{{ g.label }}</p>
+      <ion-list inset="true">
+        @for (e of g.entries; track e.id) {
+          <ion-item-sliding>
+            <ion-item>
+              <span slot="start" class="emoji" aria-hidden="true">{{ emoji(e) }}</span>
+              <ion-label>
+                <h3>{{ e.name }}</h3>
+                <p>
+                  {{ e.quantity }} {{ e.unit }} · {{ locationLabels[e.location] || e.location }} · {{ time(e) }}
+                  @if (e.finished) { · finito }
+                </p>
+              </ion-label>
+              <span slot="end" class="reason reason--{{ e.reason }}">{{ reasonLabels[e.reason] }}</span>
+            </ion-item>
+            <ion-item-options side="end">
+              <ion-item-option color="primary" (click)="undo(e)" aria-label="Rimetti in dispensa">
+                <ion-icon slot="icon-only" name="arrow-undo-outline"></ion-icon>
+              </ion-item-option>
+              <ion-item-option color="danger" (click)="remove(e)" aria-label="Elimina dallo storico">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-item-option>
+            </ion-item-options>
+          </ion-item-sliding>
+        }
+      </ion-list>
+    }
+    <p class="hint">Scorri una voce verso sinistra per rimetterla in dispensa o cancellarla dallo storico.</p>
+  } @else {
+    <div class="empty-state">
+      <span class="empty-icon">🧾</span>
+      @if (entries.length > 0) {
+        <p class="empty-title">Nessun risultato</p>
+        <p class="empty-text">Prova a cambiare periodo o filtro</p>
+      } @else {
+        <p class="empty-title">Lo storico è vuoto</p>
+        <p class="empty-text">In Dispensa premi il pulsante ⊖ di un prodotto quando lo usi o lo butti: comparirà qui.</p>
+      }
+    </div>
+  }
+
+</ion-content>

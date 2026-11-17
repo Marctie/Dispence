@@ -9,6 +9,8 @@ export const EMPTY_SHARED: SharedData = {
   customCategories: [],
   barcodeCache: {},
   purchaseHistory: {},
+  usageHistory: [],
+  customRecipes: [],
 };
 
 /** JSON con chiavi ordinate: due oggetti uguali producono sempre la stessa stringa. */
@@ -30,6 +32,8 @@ export function normalize(data: Partial<SharedData> | null | undefined): SharedD
     customCategories: data?.customCategories ?? [],
     barcodeCache: data?.barcodeCache ?? {},
     purchaseHistory: data?.purchaseHistory ?? {},
+    usageHistory: data?.usageHistory ?? [],
+    customRecipes: data?.customRecipes ?? [],
   };
 }
 
@@ -92,6 +96,10 @@ function unionList<T extends { id: string }>(local: T[], remote: T[]): T[] {
   return ordered(merge3Map(new Map(), byId(local), byId(remote), (_l, r) => r), remote, local);
 }
 
+/** Storico delle uscite: le più recenti in testa. */
+const sortUsage = <T extends { usedAt: string }>(list: T[]): T[] =>
+  [...list].sort((a, b) => b.usedAt.localeCompare(a.usedAt));
+
 /**
  * Unione a tre vie dei dati condivisi.
  * `base` è l'ultima versione sincronizzata da questo dispositivo; con `base = null` (primo collegamento
@@ -107,6 +115,8 @@ export function mergeShared(base: SharedData | null, localIn: SharedData, remote
       barcodeCache: { ...local.barcodeCache, ...remote.barcodeCache },
       purchaseHistory: toRecord(merge3Map(new Map(), byKey(local.purchaseHistory),
         byKey(remote.purchaseHistory), (l, r) => (l.count >= r.count ? l : r))),
+      usageHistory: sortUsage(unionList(local.usageHistory!, remote.usageHistory!)),
+      customRecipes: unionList(local.customRecipes!, remote.customRecipes!),
     };
   }
   const b = normalize(base);
@@ -117,6 +127,8 @@ export function mergeShared(base: SharedData | null, localIn: SharedData, remote
     barcodeCache: toRecord(merge3Map(byKey(b.barcodeCache), byKey(local.barcodeCache), byKey(remote.barcodeCache))),
     purchaseHistory: toRecord(merge3Map(byKey(b.purchaseHistory), byKey(local.purchaseHistory),
       byKey(remote.purchaseHistory), (l, r) => (l.count >= r.count ? l : r))),
+    usageHistory: sortUsage(mergeList(b.usageHistory!, local.usageHistory!, remote.usageHistory!)),
+    customRecipes: mergeList(b.customRecipes!, local.customRecipes!, remote.customRecipes!),
   };
 }
 

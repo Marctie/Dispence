@@ -271,3 +271,42 @@
 
 @keyframes fadeIn  { from { opacity: 0; }    to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+.mine-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  vertical-align: middle;
+  color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+}
+
+.steps-section {
+  margin: 8px 0 16px;
+  .ingredient-group-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+}
+
+.steps-list {
+  margin: 0;
+  padding-left: 22px;
+  li {
+    margin-bottom: 8px;
+    line-height: 1.45;
+  }
+}
+
+.custom-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  ion-button { flex: 1; }
+}

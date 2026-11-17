@@ -2,6 +2,9 @@
   <ion-toolbar>
     <ion-title>Dispensa</ion-title>
     <ion-buttons slot="end">
+      <ion-button routerLink="/usage-history" aria-label="Storico prodotti usati">
+        <ion-icon slot="icon-only" name="time-outline"></ion-icon>
+      </ion-button>
       <ion-button (click)="openAddProduct()" aria-label="Aggiungi prodotto">
         <ion-icon slot="icon-only" name="add-circle-outline"></ion-icon>
       </ion-button>
@@ -81,6 +84,7 @@
         <app-product-card
           [product]="product"
           (editClick)="openAddProduct(product)"
+          (useClick)="openUse(product)"
           (deleteClick)="confirmDelete(product)">
         </app-product-card>
       }

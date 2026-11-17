@@ -16,6 +16,10 @@ const routes: Routes = [
     loadChildren: () => import('./manage-categories/manage-categories.module').then(m => m.ManageCategoriesPageModule)
   },
   {
+    path: 'usage-history',
+    loadChildren: () => import('./usage-history/usage-history.module').then(m => m.UsageHistoryPageModule)
+  },
+  {
     path: 'help',
     loadChildren: () => import('./help/help.module').then(m => m.HelpPageModule)
   },

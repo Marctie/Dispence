@@ -103,3 +103,13 @@
 
   &:hover { color: var(--color-danger); }
 }
+
+.card-actions {
+  display: flex;
+  align-items: center;
+}
+
+.delete-btn.use-btn {
+  margin-right: 0;
+  color: var(--ion-color-primary);
+}

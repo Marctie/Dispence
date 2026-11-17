@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AlertController, ModalController } from '@ionic/angular';
+import { AlertController, ModalController, ToastController } from '@ionic/angular';
+import { UsageReason } from '../models/usage.model';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Product } from '../models/product.model';
@@ -37,6 +38,7 @@ export class InventoryPage implements OnInit, OnDestroy {
     private categoryService: CategoryService,
     private modalCtrl: ModalController,
     private alertCtrl: AlertController,
+    private toastCtrl: ToastController,
   ) {}
 
   ngOnInit(): void {
@@ -96,5 +98,47 @@ export class InventoryPage implements OnInit, OnDestroy {
       ],
     });
     await alert.present();
+  }
+
+  /** Uscita dalla dispensa: chiede quanto ne hai usato (o buttato) e lo registra nello storico. */
+  async openUse(product: Product): Promise<void> {
+    const suggested = product.quantity >= 1 && ['pz', 'conf', 'busta', 'scatola'].includes(product.unit) ? 1 : product.quantity;
+    const alert = await this.alertCtrl.create({
+      header: `Togli "${product.name}"`,
+      message: `In dispensa: ${product.quantity} ${product.unit}. Quanto ne hai tolto?`,
+      inputs: [{
+        name: 'qty', type: 'number', value: suggested, min: 0,
+        attributes: { step: 'any', inputmode: 'decimal', 'aria-label': `Quantità in ${product.unit}` },
+      }],
+      buttons: [
+        { text: 'Annulla', role: 'cancel' },
+        { text: 'Buttato', handler: v => this.doUse(product, v?.qty, 'wasted') },
+        { text: 'Usato', handler: v => this.doUse(product, v?.qty, 'used') },
+      ],
+    });
+    await alert.present();
+  }
+
+  private doUse(product: Product, raw: unknown, reason: UsageReason): boolean {
+    const qty = Number(String(raw ?? '').replace(',', '.'));
+    if (!(qty > 0)) return false; // resta aperto: quantità non valida
+    const entry = this.productService.consume(product.id, qty, reason);
+    if (entry) void this.showUndoToast(entry.finished
+      ? `${product.name} è finito ed è stato tolto dalla dispensa`
+      : `${reason === 'used' ? 'Usati' : 'Buttati'} ${entry.quantity} ${entry.unit} di ${product.name}`, entry.id);
+    return true;
+  }
+
+  private async showUndoToast(message: string, entryId: string): Promise<void> {
+    const toast = await this.toastCtrl.create({
+      message, duration: 3500, position: 'bottom',
+      buttons: [{
+        text: 'Annulla', handler: () => {
+          const e = this.productService.getUsageHistory().find(x => x.id === entryId);
+          if (e) this.productService.undoUsage(e);
+        },
+      }],
+    });
+    await toast.present();
   }
 }
