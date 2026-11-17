@@ -26,6 +26,8 @@ type NotificationToggle = 'notifySummary' | 'notifyExpiry' | 'notifySameDay' | '
   standalone: false,
 })
 export class SettingsPage implements OnInit, OnDestroy {
+  /** Versione del progetto (aggiornata da `npm run version:bump`). */
+  readonly appVersion = (environment as { appVersion?: string }).appVersion ?? '';
   @ViewChild('backupFileInput') backupFileInput!: ElementRef<HTMLInputElement>;
 
   currentTheme: 'light' | 'dark' | 'system' = 'system';

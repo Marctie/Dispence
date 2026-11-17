@@ -1,6 +1,6 @@
 {
   "name": "dispensina-digitale",
-  "version": "0.0.1",
+  "version": "1.2.1",
   "author": "Dispensina Digitale",
   "description": "Dispensina Digitale - gestione dispensa domestica",
   "scripts": {
@@ -11,6 +11,7 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint",
+    "version:bump": "node scripts/bump-version.mjs",
     "build:pages": "ng build --configuration production --base-href /Dispence/"
   },
   "private": true,
