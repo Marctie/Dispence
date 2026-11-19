@@ -110,3 +110,9 @@
   - L'assistente non usa più l'elenco completo dei modelli di Ollama, che si bloccava sugli altri modelli rimasti solo nel cloud, ma solo il proprio modello. Utenti ed elenchi di prova cancellati.
   - La connessione era molto instabile (connessioni interrotte, a tratti nessuna risoluzione dei nomi): l'assistente ritenta da solo. "Dispensina Assistente" è avviato sul PC; va riavviato dal Control Center se il PC si riavvia.
   - Nessuna modifica all'app in questa sessione: solo il numero di versione (1.4.1) e la cronologia, ripubblicati su GitHub Pages.
+- **Fine sessione del 19/11.** L'assistente funziona con `qwen2.5:3b`, la 1.4.1 è pubblicata su GitHub Pages e "Dispensina Assistente" è avviato sul PC. Punti aperti per la prossima sessione:
+  - prova da iPhone con un elenco vero (Dispensa → ✨);
+  - se il PC si riavvia, avviare "Dispensina Assistente" dal Control Center;
+  - aggiornare la privacy policy prima di portare la funzione su Android/Play;
+  - revocare il token Supabase (`sbp_`) quando non serve più;
+  - facoltativi: ampliare la tabella dei cibi (`src/ai_knowledge.py` del bot) se l'assistente sbaglia qualche prodotto; scaricare `qwen2.5vl:7b` da OneDrive su una rete senza limiti, per Quizbot e assistente Informatix.
