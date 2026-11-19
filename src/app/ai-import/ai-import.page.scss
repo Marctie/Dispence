@@ -1,0 +1,87 @@
+.status {
+  margin: 12px 16px 4px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  &--warn { background: rgba(var(--ion-color-warning-rgb), 0.15); }
+  &--ok { background: rgba(var(--ion-color-success-rgb), 0.12); }
+}
+
+.compose {
+  padding: 8px 16px;
+  ion-textarea { margin: 8px 0 12px; --border-radius: 12px; }
+}
+.compose-help { margin: 4px 0; font-size: 0.85rem; opacity: 0.8; line-height: 1.4; }
+
+.section-label {
+  margin: 16px 16px 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+
+h3.ready { color: var(--ion-color-success); font-weight: 700; }
+.when { font-size: 0.75rem; opacity: 0.6; }
+.err { color: var(--ion-color-danger); }
+ion-progress-bar { margin-top: 6px; }
+
+.report {
+  margin: 12px 16px 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--ion-color-step-50, #f4f4f4);
+}
+.report-title { margin: 0 0 8px; font-size: 1.15rem; font-weight: 700; }
+.report-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.rchip {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+}
+.report-notes {
+  margin: 10px 0 4px;
+  padding-left: 4px;
+  list-style: none;
+  font-size: 0.85rem;
+  li { margin: 3px 0; }
+}
+.link {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  color: var(--ion-color-primary);
+  font-size: 0.85rem;
+}
+.original {
+  white-space: pre-wrap;
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  border-left: 3px solid var(--ion-color-step-300, #ccc);
+  margin: 4px 0;
+  opacity: 0.85;
+}
+.hint { margin: 6px 0 0; font-size: 0.78rem; opacity: 0.65; }
+
+.tap { cursor: pointer; }
+.excluded ion-label { opacity: 0.45; text-decoration: line-through; }
+.warn { color: var(--ion-color-danger) !important; }
+.tag {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 6px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(var(--ion-color-warning-rgb), 0.25);
+  color: var(--ion-text-color);
+  &--ok { background: rgba(var(--ion-color-success-rgb), 0.18); }
+}
+.merge { color: var(--ion-color-primary) !important; }
+.edited { font-size: 0.75rem; opacity: 0.7; }
+
+.row-actions { display: flex; justify-content: flex-end; padding: 0 12px; }
+.confirm-bar { padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }

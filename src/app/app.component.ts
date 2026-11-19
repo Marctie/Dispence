@@ -14,6 +14,7 @@ import { SyncService } from './services/sync.service';
 import { shareText } from './shared/share.util';
 import { ThemeService } from './services/theme.service';
 import { TelemetryService } from './services/telemetry.service';
+import { AiImportService } from './services/ai-import.service';
 import { RecipeService } from './services/recipe.service';
 import { Router } from '@angular/router';
 
@@ -37,6 +38,7 @@ export class AppComponent implements OnInit {
   private telemetry = inject(TelemetryService);
   private recipeService = inject(RecipeService);
   private router = inject(Router);
+  private aiImport = inject(AiImportService);
 
   constructor(
     private preferencesService: PreferencesService,
@@ -159,7 +161,39 @@ export class AppComponent implements OnInit {
       .then(() => this.offerPendingInvite())
       .then(() => this.offerRecoveryCode(userId))
       .then(() => this.offerNotifications())
-      .catch(e => console.error('Sincronizzazione iniziale non riuscita', e));
+      .catch(e => console.error('Sincronizzazione iniziale non riuscita', e))
+      .finally(() => this.watchAiImport());
+  }
+
+  /** Assistente: invia gli elenchi rimasti sul telefono e avvisa quando un elenco è pronto da confermare. */
+  private aiWatching = false;
+  private watchAiImport(): void {
+    if (this.aiWatching) return;
+    this.aiWatching = true;
+    this.aiImport.init();
+    const check = async () => {
+      if (!this.aiImport.enabled) return;
+      await this.aiImport.refresh();
+      const ready = this.aiImport.takeNewlyReady();
+      if (!ready.length || this.router.url.startsWith('/ai-import')) return;
+      const n = ready.reduce((s, j) => s + j.items.length, 0);
+      const t = await this.toastCtrl.create({
+        message: ready.length === 1
+          ? `🤖 Il tuo elenco è pronto: ${n} prodott${n === 1 ? 'o' : 'i'} da controllare`
+          : `🤖 ${ready.length} elenchi pronti da controllare`,
+        duration: 8000,
+        position: 'top',
+        buttons: [{
+          text: 'Apri',
+          handler: () => { this.router.navigate(['/ai-import'], { queryParams: ready.length === 1 ? { elenco: ready[0].id } : {} }); },
+        }],
+      });
+      await t.present();
+    };
+    check().catch(() => undefined);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') check().catch(() => undefined);
+    });
   }
 
   /** Web: rinnova l'iscrizione alle push se le notifiche sono attive e il permesso è già concesso. */

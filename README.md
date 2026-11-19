@@ -41,6 +41,8 @@ Tutti usano lo **stesso account** e vedono gli stessi dati.
 - **Ricette**: ricette che puoi preparare con quello che hai, con la percentuale di ingredienti già in casa.
 - **Impostazioni**: account, dispensa condivisa, notifiche, tema chiaro/scuro, categorie personalizzate, statistiche, backup.
 
+**Inserisci con l'assistente (✨ in Dispensa).** Scrivi o incolla i prodotti appena comprati, anche alla buona (es. *"2 litri di latte, 6 uova, petto di pollo 500 g scade venerdì, 3 scatolette di tonno, gelato"*) e tocca *Invia all'assistente*. Un'intelligenza artificiale che gira sul PC di casa capisce nome, quantità, categoria, dove conservarlo (dispensa, frigo, freezer) e la scadenza (quella che hai scritto, oppure una **stimata**, segnata come tale). Quando è pronto vedi il **riepilogo**: quanti prodotti e dove finiscono, quali si sommano a prodotti già presenti, le scadenze stimate da controllare. Tocca un prodotto per modificarlo, togli la spunta per escluderlo, poi *Inserisci*: solo allora i prodotti entrano in dispensa. Se il PC è spento l'elenco **resta in coda** e viene letto appena si accende (puoi chiudere l'app: alla riapertura un avviso ti dice che è pronto); senza rete l'elenco resta sul telefono e parte da solo dopo. Serve l'account.
+
 **Scorta minima.** Quando aggiungi o modifichi un prodotto puoi attivare la *scorta minima*: se la quantità scende sotto quel valore, il prodotto viene suggerito nella lista della spesa e, se vuoi, ricevi una notifica.
 
 **Backup.** In *Impostazioni → Backup e dati* puoi esportare un file con tutti i dati e ripristinarlo. Con l'account i dati sono comunque già salvati online e li ritrovi su ogni dispositivo.
@@ -137,6 +139,7 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 
 - Informativa: https://marctie.github.io/DispenceAi-privacy/it/ (copia in `privacy-policy/`).
 - Dati salvati su **Supabase** (server UE, Irlanda), sempre cifrati in transito. Le regole del database (Row Level Security) impediscono a chiunque di vedere o modificare una dispensa di cui non è membro: verificato con test reali.
+- Gli elenchi scritti per l'**assistente** vengono salvati su Supabase, letti da un programma sul PC dello sviluppatore (modello di intelligenza artificiale locale, Ollama: nessun servizio di IA esterno) e inviati in dettaglio, con il contenuto, sul Telegram dell'amministratore; gli elenchi chiusi vengono cancellati dopo 30 giorni.
 - Nessuna pubblicità, nessun tracker di terze parti. Vengono registrati eventi tecnici di utilizzo (senza il contenuto della dispensa) ed errori dell'app, per correggere i problemi (vedi [sezione 8](#8-per-lo-sviluppatore-architettura)).
 
 ---
@@ -186,6 +189,8 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 
 **Telemetria e bot** (`TelemetryService`, `global-error-handler.ts`, `supabase/telemetry.sql`): l'app registra interazioni (senza contenuti: niente nomi prodotto) e **tutti gli errori** (ErrorHandler Angular, `window.onerror`, promesse non gestite, `console.error`, errori di sincronizzazione) in una coda locale (`telemetry_queue`) inviata alla tabella `app_events` (i client possono solo inserire; il nome utente lo mette il server). Il bot Telegram **Dispence-Track** (`Bot Telegram\Dispence-Track`, avviato dal Bot Control Center) legge la tabella ogni 15 s e manda i messaggi all'amministratore; se è spento gli eventi restano in coda e vengono consegnati alla riaccensione. Comandi: `/stato`, `/oggi`, `/utenti`, `/errori`, `/errore N`, `/risolto N`, `/ultimi N`, `/notifiche on|off`, `/aiuto`. Dettagli nel README del bot.
 
+**Assistente di inserimento** (`AiImportService`, pagina `ai-import`, `supabase/ai-import.sql`): l'app inserisce l'elenco in `ai_import_jobs` (solo `input_text` e `context` = data del giorno e categorie; senza rete resta in `dispensa_ai_outbox`); il programma `ai_worker.py` nella cartella del bot Dispence-Track (voce "Dispensina Assistente" nel Bot Control Center) lo prende con `ai_import_claim()`, chiama Ollama sul PC con uno schema JSON, calcola le scadenze dalle parole dell'utente e scrive `result`. Nessuna porta aperta sul PC. L'app legge le proprie richieste (RLS), mostra il riepilogo, inserisce i prodotti localmente (quindi passano dalla sincronizzazione normale) e chiude l'elenco con `ai_import_close('applied'|'discarded', esito)`. Ogni stato viene notificato su Telegram (`ai_import_to_notify()`, colonna `notified_state`). `ai_worker_status` dice all'app se l'assistente è acceso. Dettagli nel README del bot.
+
 **Notifiche Android (attenzione)**: con `@capacitor/local-notifications` 8 ogni notifica va pianificata con `isExactNotification: false`, altrimenti senza il permesso "Sveglie e promemoria" il plugin apre le impostazioni di sistema a ogni pianificazione e la chiamata resta in attesa.
 
 **Test**: `npx ng test --watch=false --browsers=ChromeHeadless` — unione dati, pianificatore notifiche, sincronizzazione condivisa con un finto Supabase (concorrenza, cancellazioni, lista spesa, isolamento tra account), backup, categorie.
@@ -202,7 +207,7 @@ Le notifiche considerano solo i prodotti **con una data di scadenza** inserita (
 | Build Android | `npm run build:prod` → `npx cap sync android` → in `android/`: `gradlew assembleRelease` (APK) o `bundleRelease` (AAB) con `JAVA_HOME` = JDK 21 portable in `..\..\jdk21\jdk-21.0.12.1+1` |
 | Firma Android | `keystore-privato/` + `android/keystore.properties` (percorso relativo), **mai su git, da conservare**: senza non si possono pubblicare aggiornamenti |
 | Versione Android | `android/app/build.gradle` (`versionCode` +1 a ogni pubblicazione) |
-| Schema database | `supabase/schema.sql`, poi `supabase/recovery.sql` nel SQL Editor di Supabase |
+| Schema database | `supabase/schema.sql`, poi `supabase/recovery.sql` e `supabase/ai-import.sql` nel SQL Editor di Supabase |
 | Cron avvisi | `supabase/cron.sql` (sostituire `__CRON_SECRET__`) |
 | Funzioni server | `SUPABASE_ACCESS_TOKEN=sbp_… node scripts/deploy-functions.mjs` |
 | Configurazione Supabase / email | `docs/SETUP_LOGIN_SUPABASE.md` |

@@ -20,6 +20,10 @@ const routes: Routes = [
     loadChildren: () => import('./usage-history/usage-history.module').then(m => m.UsageHistoryPageModule)
   },
   {
+    path: 'ai-import',
+    loadChildren: () => import('./ai-import/ai-import.module').then(m => m.AiImportPageModule)
+  },
+  {
     path: 'help',
     loadChildren: () => import('./help/help.module').then(m => m.HelpPageModule)
   },
